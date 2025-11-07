@@ -1,6 +1,9 @@
 fastapi[standard]
 uvicorn[standard]
 python-dotenv
+motor
+pymongo
+pydantic-settings
 psycopg2-binary
 python-jose[cryptography]
 python-multipart
@@ -8,4 +11,7 @@ python-dateutil
 email-validator
 pytest
 pytest-asyncio
-httpx
+requests
+alembic
+sqlalchemy
+
