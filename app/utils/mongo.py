@@ -48,7 +48,10 @@ def todo_to_response(todo: Dict[str, Any]) -> TodoResponse:
     Returns:
         TodoResponse instance
     """
-    return TodoResponse(**todo, _id=str(todo["_id"]))
+    # Convert _id to string and create a copy to avoid mutating the original
+    todo_dict = dict(todo)
+    todo_dict["_id"] = str(todo_dict["_id"])
+    return TodoResponse(**todo_dict)
 
 
 def add_timestamps(data: Dict[str, Any]) -> Dict[str, Any]:
