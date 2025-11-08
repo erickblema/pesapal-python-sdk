@@ -1,7 +1,7 @@
 """Pydantic schemas for payment API."""
 
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, model_serializer
+from typing import Optional, Any
 from datetime import datetime
 from decimal import Decimal
 
@@ -17,10 +17,10 @@ class PaymentCreateRequest(BaseModel):
 
 
 class PaymentResponse(BaseModel):
-    """Schema for payment response."""
+    """Schema for payment response - uses Pesapal v3 camelCase format."""
     id: str = Field(..., alias="_id", description="Payment ID")
     order_id: str = Field(..., description="Order identifier")
-    amount: Decimal = Field(..., description="Payment amount")
+    amount: Decimal = Field(..., description="Payment amount")  # Keep as Decimal internally
     currency: str = Field(..., description="Currency code")
     description: str = Field(..., description="Payment description")
     status: str = Field(..., description="Payment status")
@@ -31,9 +31,32 @@ class PaymentResponse(BaseModel):
     created_at: datetime = Field(..., description="Creation timestamp")
     updated_at: datetime = Field(..., description="Last update timestamp")
     
+    @model_serializer
+    def serialize_model(self) -> dict:
+        """Serialize model with OrderTrackingId in camelCase and amount as string."""
+        data = {
+            "_id": self.id,  # Use self.id (which is aliased from _id)
+            "order_id": self.order_id,
+            "amount": str(self.amount),  # Convert Decimal to string as per Pesapal format
+            "currency": self.currency,
+            "description": self.description,
+            "status": self.status,
+            "OrderTrackingId": self.order_tracking_id,  # Use camelCase for Pesapal v3
+            "redirect_url": self.redirect_url,
+            "payment_method": self.payment_method,
+            "confirmation_code": self.confirmation_code,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
+        # Keep all fields, including None values for optional fields
+        return data
+    
     class Config:
         populate_by_name = True
         from_attributes = True
+        json_encoders = {
+            datetime: lambda v: v.isoformat()
+        }
 
 
 class PaymentStatusResponse(BaseModel):

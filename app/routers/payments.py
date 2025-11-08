@@ -151,6 +151,56 @@ async def check_payment_status(
         )
 
 
+@router.get("/status/transaction", response_model=PaymentStatusResponse)
+async def get_transaction_status(
+    orderTrackingId: str,
+    service: PaymentService = Depends(get_payment_service)
+):
+    """
+    Get transaction status from Pesapal using OrderTrackingId.
+    
+    This endpoint corresponds to Pesapal v3 GetTransactionStatus API.
+    Use this after receiving a callback or IPN notification.
+    
+    - **orderTrackingId**: Pesapal order tracking ID (from callback/IPN)
+    
+    Returns payment status information from Pesapal.
+    """
+    try:
+        # Find payment by tracking ID
+        payment = await service.repository.get_by_tracking_id(orderTrackingId)
+        
+        if not payment:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Payment not found for tracking ID: {orderTrackingId}"
+            )
+        
+        # Get fresh status from Pesapal
+        updated_payment = await service.check_payment_status(payment.order_id)
+        
+        return PaymentStatusResponse(
+            order_id=updated_payment.order_id,
+            status=updated_payment.status,
+            order_tracking_id=updated_payment.order_tracking_id,
+            payment_method=updated_payment.payment_method,
+            confirmation_code=updated_payment.confirmation_code,
+            updated_at=updated_payment.updated_at
+        )
+    except HTTPException:
+        raise
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get transaction status: {str(e)}"
+        )
+
+
 @router.get("/", response_model=List[PaymentResponse])
 async def list_payments(
     skip: int = 0,
