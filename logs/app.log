@@ -310,3 +310,19 @@ ValueError: Invalid webhook data: missing OrderTrackingId or OrderMerchantRefere
 2025-11-09 00:49:51 - main - INFO - Starting application...
 2025-11-09 00:49:53 - app.database.db - INFO - MongoDB connected: payments-helper-db
 2025-11-09 00:49:53 - main - INFO - Application started successfully
+2025-11-09 00:49:57 - main - INFO - Shutting down application...
+2025-11-09 00:49:57 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 00:49:57 - main - INFO - Application shut down
+2025-11-09 00:49:58 - main - INFO - Starting application...
+2025-11-09 00:49:59 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 00:49:59 - main - INFO - Application started successfully
+2025-11-09 00:51:19 - app.routers.webhooks - INFO - Webhook GET headers: {'host': 'localhost:8000', 'connection': 'keep-alive', 'sec-ch-ua-platform': '"macOS"', 'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'accept': 'application/json', 'sec-ch-ua': '"Not_A Brand";v="99", "Chromium";v="142"', 'dnt': '1', 'sec-ch-ua-mobile': '?0', 'sec-fetch-site': 'same-origin', 'sec-fetch-mode': 'cors', 'sec-fetch-dest': 'empty', 'referer': 'http://localhost:8000/docs', 'accept-encoding': 'gzip, deflate, br, zstd', 'accept-language': 'en-US,en;q=0.9', 'cookie': '_ga=GA1.1.1685698082.1760778780; accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ZjhiNDAyMGMxMmY5YTc4MTNlZDliMyIsIm5hbWUiOiJFcmljayIsImVtYWlsIjoiaGVqYWJleDkzMEBmb3hyb2lkcy5jb20iLCJyb2xlIjoiSE9URUwiLCJpYXQiOjE3NjExMjk0OTcsImV4cCI6MTc2MTczNDI5N30.LPxxPmJ792nh6p99mLNZ41-j1odyBal21fLPSJG2TgE; _ga_XB8EDYJTYJ=GS2.1.s1762271331$o15$g1$t1762272832$j60$l0$h0; sessionId=e3b51f21-e269-4a36-b8fa-776f913c2e05; __next_hmr_refresh_hash__=171'}
+2025-11-09 00:51:19 - app.routers.webhooks - INFO - Webhook GET data received: {}
+2025-11-09 00:51:19 - app.routers.webhooks - WARNING - Webhook GET received without signature - processing anyway
+2025-11-09 00:51:19 - app.routers.webhooks - WARNING - OrderNotificationType not found in webhook data (GET), using default: IPNCHANGE
+2025-11-09 00:51:19 - app.routers.webhooks - WARNING - Webhook GET received but missing required fields (OrderTrackingId or OrderMerchantReference)
+2025-11-09 00:51:52 - app.routers.webhooks - INFO - Webhook GET headers: {'host': 'localhost:8000', 'connection': 'keep-alive', 'sec-ch-ua-platform': '"macOS"', 'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'accept': 'application/json', 'sec-ch-ua': '"Not_A Brand";v="99", "Chromium";v="142"', 'dnt': '1', 'sec-ch-ua-mobile': '?0', 'sec-fetch-site': 'same-origin', 'sec-fetch-mode': 'cors', 'sec-fetch-dest': 'empty', 'referer': 'http://localhost:8000/docs', 'accept-encoding': 'gzip, deflate, br, zstd', 'accept-language': 'en-US,en;q=0.9', 'cookie': '_ga=GA1.1.1685698082.1760778780; accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ZjhiNDAyMGMxMmY5YTc4MTNlZDliMyIsIm5hbWUiOiJFcmljayIsImVtYWlsIjoiaGVqYWJleDkzMEBmb3hyb2lkcy5jb20iLCJyb2xlIjoiSE9URUwiLCJpYXQiOjE3NjExMjk0OTcsImV4cCI6MTc2MTczNDI5N30.LPxxPmJ792nh6p99mLNZ41-j1odyBal21fLPSJG2TgE; _ga_XB8EDYJTYJ=GS2.1.s1762271331$o15$g1$t1762272832$j60$l0$h0; sessionId=e3b51f21-e269-4a36-b8fa-776f913c2e05; __next_hmr_refresh_hash__=171'}
+2025-11-09 00:51:52 - app.routers.webhooks - INFO - Webhook GET data received: {}
+2025-11-09 00:51:52 - app.routers.webhooks - WARNING - Webhook GET received without signature - processing anyway
+2025-11-09 00:51:52 - app.routers.webhooks - WARNING - OrderNotificationType not found in webhook data (GET), using default: IPNCHANGE
+2025-11-09 00:51:52 - app.routers.webhooks - WARNING - Webhook GET received but missing required fields (OrderTrackingId or OrderMerchantReference)
