@@ -1,11 +1,14 @@
 """Payment API routes."""
 
-from fastapi import APIRouter, HTTPException, status, Depends
-from typing import List
+import logging
+from fastapi import APIRouter, HTTPException, status, Depends, Request
+from typing import List, Optional
 from decimal import Decimal
 
 from app.schema.payment import PaymentCreateRequest, PaymentResponse, PaymentStatusResponse
 from app.services.payment_service import PaymentService
+
+logger = logging.getLogger(__name__)
 
 
 router = APIRouter(prefix="/payments", tags=["payments"])

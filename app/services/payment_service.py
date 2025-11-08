@@ -107,6 +107,9 @@ class PaymentService:
                 description=description,
                 callback_url=callback_url,
                 notification_id=notification_id,
+                redirect_mode=None,  # Will default to TOP_WINDOW in client
+                cancellation_url=None,  # Optional - can be added later if needed
+                branch=None,  # Optional - can be added later if needed
                 customer=customer,
                 billing_address=billing_address
             )

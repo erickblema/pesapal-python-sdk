@@ -255,8 +255,26 @@ class PesapalClient:
         else:
             logger.warning("notification_id not provided in payment request")
         
+        # Add optional redirect_mode (TOP_WINDOW or PARENT_WINDOW, default: TOP_WINDOW)
+        if payment_request.redirect_mode:
+            request_data["redirect_mode"] = payment_request.redirect_mode
+        else:
+            # Default to TOP_WINDOW as per Pesapal docs
+            request_data["redirect_mode"] = "TOP_WINDOW"
+        
+        # Add optional cancellation_url
+        if payment_request.cancellation_url:
+            request_data["cancellation_url"] = payment_request.cancellation_url
+        
+        # Add optional branch
+        if payment_request.branch:
+            request_data["branch"] = payment_request.branch
+        
+        # billing_address is required by Pesapal (but we allow optional for flexibility)
         if payment_request.billing_address:
             request_data["billing_address"] = payment_request.billing_address
+        else:
+            logger.warning("billing_address not provided - Pesapal may require this")
         
         logger.info(
             f"Submitting payment order: {payment_request.id} - "

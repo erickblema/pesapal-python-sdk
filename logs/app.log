@@ -384,3 +384,39 @@ ValueError: Invalid webhook data: missing OrderTrackingId or OrderMerchantRefere
 2025-11-09 01:10:46 - main - INFO - Starting application...
 2025-11-09 01:10:47 - app.database.db - INFO - MongoDB connected: payments-helper-db
 2025-11-09 01:10:47 - main - INFO - Application started successfully
+2025-11-09 01:13:23 - app.routers.webhooks - INFO - Webhook headers: {'host': 'localhost:8000', 'connection': 'keep-alive', 'content-length': '0', 'sec-ch-ua-platform': '"macOS"', 'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'accept': 'application/json', 'sec-ch-ua': '"Not_A Brand";v="99", "Chromium";v="142"', 'dnt': '1', 'sec-ch-ua-mobile': '?0', 'origin': 'http://localhost:8000', 'sec-fetch-site': 'same-origin', 'sec-fetch-mode': 'cors', 'sec-fetch-dest': 'empty', 'referer': 'http://localhost:8000/docs', 'accept-encoding': 'gzip, deflate, br, zstd', 'accept-language': 'en-US,en;q=0.9', 'cookie': '_ga=GA1.1.1685698082.1760778780; accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ZjhiNDAyMGMxMmY5YTc4MTNlZDliMyIsIm5hbWUiOiJFcmljayIsImVtYWlsIjoiaGVqYWJleDkzMEBmb3hyb2lkcy5jb20iLCJyb2xlIjoiSE9URUwiLCJpYXQiOjE3NjExMjk0OTcsImV4cCI6MTc2MTczNDI5N30.LPxxPmJ792nh6p99mLNZ41-j1odyBal21fLPSJG2TgE; _ga_XB8EDYJTYJ=GS2.1.s1762271331$o15$g1$t1762272832$j60$l0$h0; sessionId=e3b51f21-e269-4a36-b8fa-776f913c2e05; __next_hmr_refresh_hash__=171'}
+2025-11-09 01:13:23 - app.routers.webhooks - INFO - Webhook raw body: 
+2025-11-09 01:13:23 - app.routers.webhooks - INFO - Content-Type: 
+2025-11-09 01:13:23 - app.routers.webhooks - INFO - Webhook data received: {}
+2025-11-09 01:13:23 - app.routers.webhooks - ERROR - Empty webhook data received. Body: , Content-Type: 
+2025-11-09 01:13:25 - app.routers.webhooks - INFO - Webhook headers: {'host': 'localhost:8000', 'connection': 'keep-alive', 'content-length': '0', 'sec-ch-ua-platform': '"macOS"', 'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'accept': 'application/json', 'sec-ch-ua': '"Not_A Brand";v="99", "Chromium";v="142"', 'dnt': '1', 'sec-ch-ua-mobile': '?0', 'origin': 'http://localhost:8000', 'sec-fetch-site': 'same-origin', 'sec-fetch-mode': 'cors', 'sec-fetch-dest': 'empty', 'referer': 'http://localhost:8000/docs', 'accept-encoding': 'gzip, deflate, br, zstd', 'accept-language': 'en-US,en;q=0.9', 'cookie': '_ga=GA1.1.1685698082.1760778780; accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ZjhiNDAyMGMxMmY5YTc4MTNlZDliMyIsIm5hbWUiOiJFcmljayIsImVtYWlsIjoiaGVqYWJleDkzMEBmb3hyb2lkcy5jb20iLCJyb2xlIjoiSE9URUwiLCJpYXQiOjE3NjExMjk0OTcsImV4cCI6MTc2MTczNDI5N30.LPxxPmJ792nh6p99mLNZ41-j1odyBal21fLPSJG2TgE; _ga_XB8EDYJTYJ=GS2.1.s1762271331$o15$g1$t1762272832$j60$l0$h0; sessionId=e3b51f21-e269-4a36-b8fa-776f913c2e05; __next_hmr_refresh_hash__=171'}
+2025-11-09 01:13:25 - app.routers.webhooks - INFO - Webhook raw body: 
+2025-11-09 01:13:25 - app.routers.webhooks - INFO - Content-Type: 
+2025-11-09 01:13:25 - app.routers.webhooks - INFO - Webhook data received: {}
+2025-11-09 01:13:25 - app.routers.webhooks - ERROR - Empty webhook data received. Body: , Content-Type: 
+2025-11-09 01:13:26 - app.routers.webhooks - INFO - Webhook headers: {'host': 'localhost:8000', 'connection': 'keep-alive', 'content-length': '0', 'sec-ch-ua-platform': '"macOS"', 'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'accept': 'application/json', 'sec-ch-ua': '"Not_A Brand";v="99", "Chromium";v="142"', 'dnt': '1', 'sec-ch-ua-mobile': '?0', 'origin': 'http://localhost:8000', 'sec-fetch-site': 'same-origin', 'sec-fetch-mode': 'cors', 'sec-fetch-dest': 'empty', 'referer': 'http://localhost:8000/docs', 'accept-encoding': 'gzip, deflate, br, zstd', 'accept-language': 'en-US,en;q=0.9', 'cookie': '_ga=GA1.1.1685698082.1760778780; accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ZjhiNDAyMGMxMmY5YTc4MTNlZDliMyIsIm5hbWUiOiJFcmljayIsImVtYWlsIjoiaGVqYWJleDkzMEBmb3hyb2lkcy5jb20iLCJyb2xlIjoiSE9URUwiLCJpYXQiOjE3NjExMjk0OTcsImV4cCI6MTc2MTczNDI5N30.LPxxPmJ792nh6p99mLNZ41-j1odyBal21fLPSJG2TgE; _ga_XB8EDYJTYJ=GS2.1.s1762271331$o15$g1$t1762272832$j60$l0$h0; sessionId=e3b51f21-e269-4a36-b8fa-776f913c2e05; __next_hmr_refresh_hash__=171'}
+2025-11-09 01:13:26 - app.routers.webhooks - INFO - Webhook raw body: 
+2025-11-09 01:13:26 - app.routers.webhooks - INFO - Content-Type: 
+2025-11-09 01:13:26 - app.routers.webhooks - INFO - Webhook data received: {}
+2025-11-09 01:13:26 - app.routers.webhooks - ERROR - Empty webhook data received. Body: , Content-Type: 
+2025-11-09 01:14:12 - pesapal.client - INFO - OAuth token obtained successfully
+2025-11-09 01:14:12 - pesapal.client - INFO - Submitting payment order: str5-5-3343ffNBS-NSing - 4000.0 TZS
+2025-11-09 01:14:12 - app.services.payment_service - INFO - Payment initiated successfully: order_id=str5-5-3343ffNBS-NSing, tracking_id=1138cd36-063a-48c3-bc7d-db1d9b5a70bd
+2025-11-09 01:27:38 - main - INFO - Shutting down application...
+2025-11-09 01:27:38 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 01:27:38 - main - INFO - Application shut down
+2025-11-09 01:27:38 - main - INFO - Starting application...
+2025-11-09 01:27:40 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 01:27:40 - main - INFO - Application started successfully
+2025-11-09 01:27:40 - main - INFO - Starting application...
+2025-11-09 01:27:43 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 01:27:43 - main - INFO - Application started successfully
+2025-11-09 01:27:44 - main - INFO - Starting application...
+2025-11-09 01:27:45 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 01:27:45 - main - INFO - Application started successfully
+2025-11-09 01:27:46 - main - INFO - Starting application...
+2025-11-09 01:27:47 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 01:27:47 - main - INFO - Application started successfully
+2025-11-09 01:27:47 - main - INFO - Starting application...
+2025-11-09 01:27:49 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 01:27:49 - main - INFO - Application started successfully

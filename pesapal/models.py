@@ -11,14 +11,16 @@ from pesapal.constants import SUPPORTED_CURRENCIES, SUPPORTED_PAYMENT_METHODS
 class PaymentRequest(BaseModel):
     """Model for initiating a payment request."""
     
-    id: str = Field(..., description="Unique order ID (merchant reference)")
+    id: str = Field(..., description="Unique order ID (merchant reference), max 50 characters")
     currency: str = Field(..., description="Currency code (KES, TZS, UGX, RWF, USD)")
     amount: Decimal = Field(..., gt=0, description="Payment amount")
-    description: str = Field(..., max_length=100, description="Order description")
+    description: str = Field(..., max_length=100, description="Order description, max 100 characters")
     callback_url: str = Field(..., description="Callback URL for payment status")
-    redirect_mode: Optional[str] = Field("GET", description="Redirect mode (GET or POST)")
+    redirect_mode: Optional[str] = Field(None, description="Redirect mode: TOP_WINDOW or PARENT_WINDOW (default: TOP_WINDOW)")
+    cancellation_url: Optional[str] = Field(None, description="URL to redirect if customer cancels payment")
     notification_id: Optional[str] = Field(None, description="IPN notification ID (required for API 3.0)")
-    billing_address: Optional[dict] = Field(None, description="Billing address information")
+    branch: Optional[str] = Field(None, description="Store/branch name for this payment")
+    billing_address: Optional[dict] = Field(None, description="Billing address information (required by Pesapal)")
     customer: Optional[dict] = Field(None, description="Customer information")
     
     @field_validator("currency")
@@ -44,6 +46,7 @@ class PaymentResponse(BaseModel):
     merchant_reference: Optional[str] = Field(None, description="Merchant reference (order ID)")
     redirect_url: Optional[str] = Field(None, description="URL to redirect customer for payment")
     status: Optional[str] = Field(None, description="Payment status")
+    error: Optional[int] = Field(None, description="Error code (null if successful)")
     message: Optional[str] = Field(None, description="Response message")
     
     # Allow extra fields from Pesapal API
