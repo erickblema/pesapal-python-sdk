@@ -204,6 +204,83 @@ async def get_transaction_status(
         )
 
 
+@router.get("/callback")
+async def payment_callback(
+    request: Request,
+    OrderTrackingId: Optional[str] = None,
+    OrderNotificationType: Optional[str] = None,
+    OrderMerchantReference: Optional[str] = None,
+    service: PaymentService = Depends(get_payment_service)
+):
+    """
+    Handle payment callback from Pesapal.
+    
+    Pesapal redirects customers to this URL after payment with query parameters:
+    - **OrderTrackingId**: Pesapal order tracking ID
+    - **OrderNotificationType**: Always "CALLBACKURL" for callbacks
+    - **OrderMerchantReference**: Your order ID
+    
+    This endpoint automatically fetches the payment status from Pesapal.
+    """
+    try:
+        # Get query parameters (Pesapal sends them in camelCase)
+        order_tracking_id = OrderTrackingId or request.query_params.get("OrderTrackingId")
+        order_notification_type = OrderNotificationType or request.query_params.get("OrderNotificationType")
+        order_merchant_reference = OrderMerchantReference or request.query_params.get("OrderMerchantReference")
+        
+        logger.info(
+            f"Payment callback received: tracking_id={order_tracking_id}, "
+            f"type={order_notification_type}, reference={order_merchant_reference}"
+        )
+        
+        if not order_tracking_id and not order_merchant_reference:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Missing required parameters: OrderTrackingId or OrderMerchantReference"
+            )
+        
+        # Find payment by tracking ID or order ID
+        payment = None
+        if order_tracking_id:
+            payment = await service.repository.get_by_tracking_id(order_tracking_id)
+        if not payment and order_merchant_reference:
+            payment = await service.repository.get_by_order_id(order_merchant_reference)
+        
+        if not payment:
+            logger.warning(f"Callback received for unknown payment: tracking_id={order_tracking_id}, order_id={order_merchant_reference}")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Payment not found for tracking ID: {order_tracking_id or order_merchant_reference}"
+            )
+        
+        # Automatically fetch fresh status from Pesapal (as per Pesapal docs)
+        try:
+            updated_payment = await service.check_payment_status(payment.order_id)
+            logger.info(f"Payment status updated via callback: order_id={payment.order_id}, status={updated_payment.status}")
+        except Exception as e:
+            logger.error(f"Error fetching payment status from Pesapal: {e}")
+            # Continue with existing payment data if status check fails
+        
+        # Return payment status information
+        # In a real app, you'd redirect to a success/failure page
+        return {
+            "message": "Payment callback received",
+            "order_id": payment.order_id,
+            "order_tracking_id": payment.order_tracking_id,
+            "status": payment.status,
+            "redirect_url": payment.redirect_url
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error processing callback: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error processing callback: {str(e)}"
+        )
+
+
 @router.get("/", response_model=List[PaymentResponse])
 async def list_payments(
     skip: int = 0,
