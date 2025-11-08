@@ -497,3 +497,24 @@ ValueError: Invalid webhook data: missing OrderTrackingId or OrderMerchantRefere
 2025-11-09 01:32:57 - app.routers.webhooks - INFO - Content-Type: 
 2025-11-09 01:32:57 - app.routers.webhooks - INFO - Webhook data received: {}
 2025-11-09 01:32:57 - app.routers.webhooks - WARNING - Empty webhook data received. Body: , Content-Type: 
+2025-11-09 01:35:44 - main - INFO - Shutting down application...
+2025-11-09 01:35:44 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 01:35:44 - main - INFO - Application shut down
+2025-11-09 01:35:45 - main - INFO - Starting application...
+2025-11-09 01:35:47 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 01:35:47 - main - INFO - Application started successfully
+2025-11-09 02:12:35 - main - INFO - Shutting down application...
+2025-11-09 02:12:35 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 02:12:35 - main - INFO - Application shut down
+2025-11-09 02:12:36 - main - INFO - Starting application...
+2025-11-09 02:12:37 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 02:12:37 - main - INFO - Application started successfully
+2025-11-09 02:12:38 - main - INFO - Starting application...
+2025-11-09 02:12:39 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 02:12:39 - main - INFO - Application started successfully
+2025-11-09 02:12:44 - main - INFO - Shutting down application...
+2025-11-09 02:12:45 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 02:12:45 - main - INFO - Application shut down
+2025-11-09 02:12:45 - main - INFO - Starting application...
+2025-11-09 02:12:47 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 02:12:47 - main - INFO - Application started successfully
