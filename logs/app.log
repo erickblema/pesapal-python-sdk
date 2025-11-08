@@ -22,3 +22,6 @@
 2025-11-08 14:24:57 - main - INFO - Starting application...
 2025-11-08 14:25:04 - app.database.db - INFO - MongoDB connected: payments-helper-db
 2025-11-08 14:25:04 - main - INFO - Application started successfully
+2025-11-08 14:26:31 - pesapal.client - INFO - OAuth token obtained successfully
+2025-11-08 14:26:31 - pesapal.client - INFO - Submitting payment order: ORDER-00557 - 75000.0 TZS
+2025-11-08 14:26:32 - app.services.payment_service - INFO - Payment initiated successfully: order_id=ORDER-00557, tracking_id=85376ce0-d0e8-4c44-b182-db1d57ccb35f
