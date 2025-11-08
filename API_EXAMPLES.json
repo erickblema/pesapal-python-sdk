@@ -1,0 +1,120 @@
+{
+  "payment_create_examples": {
+    "example_1_basic_kes": {
+      "order_id": "ORDER-001",
+      "amount": "100.00",
+      "currency": "KES",
+      "description": "Payment for KES 100"
+    },
+    "example_2_basic_tzs": {
+      "order_id": "ORDER-002",
+      "amount": "50000.00",
+      "currency": "TZS",
+      "description": "Payment for TZS 50000"
+    },
+    "example_3_with_customer": {
+      "order_id": "ORDER-003",
+      "amount": "250.00",
+      "currency": "KES",
+      "description": "Payment with customer information",
+      "customer": {
+        "first_name": "John",
+        "last_name": "Doe",
+        "email": "john.doe@example.com",
+        "phone_number": "+255712345678"
+      }
+    },
+    "example_4_full_details_kenya": {
+      "order_id": "ORDER-004",
+      "amount": "500.00",
+      "currency": "KES",
+      "description": "Payment with full customer and billing details",
+      "customer": {
+        "first_name": "Jane",
+        "last_name": "Smith",
+        "email": "jane.smith@example.com",
+        "phone_number": "+254712345678"
+      },
+      "billing_address": {
+        "phone_number": "+254712345678",
+        "email_address": "jane.smith@example.com",
+        "country_code": "KE",
+        "first_name": "Jane",
+        "middle_name": "",
+        "last_name": "Smith",
+        "line_1": "123 Main Street",
+        "line_2": "Apartment 4B",
+        "city": "Nairobi",
+        "state": "Nairobi",
+        "postal_code": "00100",
+        "zip_code": "00100"
+      }
+    },
+    "example_5_tanzania_full": {
+      "order_id": "ORDER-005",
+      "amount": "75000.00",
+      "currency": "TZS",
+      "description": "Tanzania payment with full details",
+      "customer": {
+        "first_name": "Ahmed",
+        "last_name": "Hassan",
+        "email": "ahmed.hassan@example.com",
+        "phone_number": "+255712345678"
+      },
+      "billing_address": {
+        "phone_number": "+255712345678",
+        "email_address": "ahmed.hassan@example.com",
+        "country_code": "TZ",
+        "first_name": "Ahmed",
+        "middle_name": "",
+        "last_name": "Hassan",
+        "line_1": "456 Uhuru Street",
+        "line_2": "",
+        "city": "Dar es Salaam",
+        "state": "",
+        "postal_code": "11101",
+        "zip_code": "11101"
+      }
+    },
+    "example_6_uganda": {
+      "order_id": "ORDER-006",
+      "amount": "100000.00",
+      "currency": "UGX",
+      "description": "Payment in Ugandan Shilling"
+    },
+    "example_7_rwanda": {
+      "order_id": "ORDER-007",
+      "amount": "50000.00",
+      "currency": "RWF",
+      "description": "Payment in Rwandan Franc"
+    },
+    "example_8_usd": {
+      "order_id": "ORDER-008",
+      "amount": "50.00",
+      "currency": "USD",
+      "description": "Payment in US Dollar"
+    },
+    "example_9_minimal_test": {
+      "order_id": "ORDER-TEST-001",
+      "amount": "1.00",
+      "currency": "KES",
+      "description": "Minimum test payment"
+    }
+  },
+  "quick_copy_swagger": {
+    "most_common": {
+      "order_id": "ORDER-TEST-001",
+      "amount": "100.00",
+      "currency": "KES",
+      "description": "Test payment"
+    },
+    "tanzania_quick": {
+      "order_id": "ORDER-TZS-001",
+      "amount": "50000.00",
+      "currency": "TZS",
+      "description": "Tanzania test payment"
+    }
+  },
+  "note": "Copy these JSON payloads directly into Swagger UI at http://localhost:8000/docs or use in your API client"
+}
+

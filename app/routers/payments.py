@@ -32,14 +32,29 @@ async def create_payment(
     - **billing_address**: Optional billing address
     """
     try:
+        # Validate currency before processing
+        currency_upper = request.currency.upper()
+        if currency_upper not in ["KES", "TZS", "UGX", "RWF", "USD"]:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid currency: {request.currency}. Supported: KES, TZS, UGX, RWF, USD"
+            )
+        
         payment = await service.initiate_payment(
             order_id=request.order_id,
             amount=request.amount,
-            currency=request.currency.upper(),
+            currency=currency_upper,
             description=request.description,
             customer=request.customer,
             billing_address=request.billing_address
         )
+        
+        # Check if payment was successfully initiated
+        if not payment.order_tracking_id or not payment.redirect_url:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Payment initiation failed: No tracking ID or redirect URL received. Check Pesapal credentials and API status."
+            )
         
         return PaymentResponse(
             _id=str(payment._id),
@@ -55,6 +70,8 @@ async def create_payment(
             created_at=payment.created_at,
             updated_at=payment.updated_at
         )
+    except HTTPException:
+        raise
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

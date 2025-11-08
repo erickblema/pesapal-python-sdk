@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     pesapal_sandbox: bool = True
     pesapal_callback_url: Optional[str] = None
     pesapal_ipn_url: Optional[str] = None
+    pesapal_ipn_id: Optional[str] = None  # IPN Notification ID (required for API 3.0)
     
     # API Settings
     api_title: str = "Pesapal Payment SDK API"
@@ -53,6 +54,13 @@ def log_configuration():
     print(f"   MongoDB: {'✅ Configured' if settings.mongodb_url and not has_placeholder else '❌ Not configured'}")
     if settings.mongodb_url:
         print(f"   Database: {settings.mongodb_db_name}")
+    
+    # Check Pesapal configuration
+    pesapal_configured = settings.pesapal_consumer_key and settings.pesapal_consumer_secret
+    print(f"   Pesapal: {'✅ Configured' if pesapal_configured and settings.pesapal_ipn_id else '❌ Not configured'}")
+    if pesapal_configured and not settings.pesapal_ipn_id:
+        print("   ⚠️  Warning: PESAPAL_IPN_ID not set - required for API 3.0")
+        print("      Register an IPN URL in Pesapal dashboard to get an IPN ID")
     
     if has_placeholder:
         print("  ⚠️  Warning: Placeholder password detected - update MONGODB_URL in .env")

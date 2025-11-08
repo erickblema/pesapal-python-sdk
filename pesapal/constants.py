@@ -9,6 +9,7 @@ PESAPAL_SANDBOX_BASE_URL = "https://cybqa.pesapal.com/pesapalv3"
 PESAPAL_PRODUCTION_BASE_URL = "https://pay.pesapal.com/v3"
 
 # API Endpoints
+ENDPOINT_AUTH_TOKEN = "/api/Auth/RequestToken"  # OAuth token endpoint (required for API 3.0)
 ENDPOINT_SUBMIT_ORDER = "/api/Transactions/SubmitOrderRequest"
 ENDPOINT_GET_STATUS = "/api/Transactions/GetTransactionStatus"
 ENDPOINT_IPN_REGISTER = "/api/URLSetup/RegisterIPN"

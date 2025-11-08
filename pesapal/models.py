@@ -17,7 +17,7 @@ class PaymentRequest(BaseModel):
     description: str = Field(..., max_length=100, description="Order description")
     callback_url: str = Field(..., description="Callback URL for payment status")
     redirect_mode: Optional[str] = Field("GET", description="Redirect mode (GET or POST)")
-    notification_id: Optional[str] = Field(None, description="IPN notification ID")
+    notification_id: Optional[str] = Field(None, description="IPN notification ID (required for API 3.0)")
     billing_address: Optional[dict] = Field(None, description="Billing address information")
     customer: Optional[dict] = Field(None, description="Customer information")
     
@@ -40,11 +40,15 @@ class PaymentRequest(BaseModel):
 class PaymentResponse(BaseModel):
     """Model for payment initiation response."""
     
-    order_tracking_id: str = Field(..., description="Pesapal order tracking ID")
-    merchant_reference: str = Field(..., description="Merchant reference (order ID)")
-    redirect_url: str = Field(..., description="URL to redirect customer for payment")
+    order_tracking_id: Optional[str] = Field(None, description="Pesapal order tracking ID")
+    merchant_reference: Optional[str] = Field(None, description="Merchant reference (order ID)")
+    redirect_url: Optional[str] = Field(None, description="URL to redirect customer for payment")
     status: Optional[str] = Field(None, description="Payment status")
     message: Optional[str] = Field(None, description="Response message")
+    
+    # Allow extra fields from Pesapal API
+    class Config:
+        extra = "allow"
 
 
 class PaymentStatus(BaseModel):

@@ -23,7 +23,10 @@ class PaymentService:
         """Get or create Pesapal client."""
         if not self._client:
             if not settings.pesapal_consumer_key or not settings.pesapal_consumer_secret:
-                raise ValueError("Pesapal credentials not configured")
+                raise ValueError(
+                    "Pesapal credentials not configured. "
+                    "Set PESAPAL_CONSUMER_KEY and PESAPAL_CONSUMER_SECRET in environment variables."
+                )
             
             self._client = PesapalClient(
                 consumer_key=settings.pesapal_consumer_key,
@@ -84,17 +87,34 @@ class PaymentService:
                 # Default callback URL (should be set in production)
                 callback_url = "https://payment-helper.onrender.com/payments/callback"
             
+            # Get IPN notification ID from settings
+            notification_id = settings.pesapal_ipn_id
+            if not notification_id:
+                raise ValueError(
+                    "PESAPAL_IPN_ID is required. "
+                    "Set it in your .env file. "
+                    "You can register an IPN URL in Pesapal dashboard to get an IPN ID."
+                )
+            
             payment_request = PaymentRequest(
                 id=order_id,
                 amount=amount,
                 currency=currency,
                 description=description,
                 callback_url=callback_url,
+                notification_id=notification_id,
                 customer=customer,
                 billing_address=billing_address
             )
             
             response: PaymentResponse = await client.submit_order(payment_request)
+            
+            # Validate response has required data
+            if not response.order_tracking_id and not response.redirect_url:
+                raise PesapalError(
+                    f"Pesapal API returned invalid response: {response.model_dump()}. "
+                    f"Missing order_tracking_id and redirect_url."
+                )
             
             # Update payment with tracking ID and redirect URL
             payment.order_tracking_id = response.order_tracking_id
@@ -118,11 +138,25 @@ class PaymentService:
         except PesapalError as e:
             # Update payment status to failed
             from datetime import datetime
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Pesapal API error for order {order_id}: {str(e)}")
             await self.repository.collection.update_one(
                 {"_id": payment._id},
                 {"$set": {"status": "FAILED", "updated_at": datetime.utcnow()}}
             )
-            raise
+            raise ValueError(f"Failed to initiate payment with Pesapal: {str(e)}")
+        except Exception as e:
+            # Catch any other errors
+            from datetime import datetime
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Unexpected error initiating payment for order {order_id}: {str(e)}", exc_info=True)
+            await self.repository.collection.update_one(
+                {"_id": payment._id},
+                {"$set": {"status": "FAILED", "updated_at": datetime.utcnow()}}
+            )
+            raise ValueError(f"Failed to initiate payment: {str(e)}")
     
     async def check_payment_status(self, order_id: str) -> Payment:
         """
