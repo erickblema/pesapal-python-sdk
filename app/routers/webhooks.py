@@ -292,12 +292,21 @@ async def pesapal_webhook_get(
             None
         )
         
+        # Extract order notification type from webhook data (don't hardcode)
         order_notification_type = (
             webhook_data.get("OrderNotificationType") or
             webhook_data.get("order_notification_type") or
             webhook_data.get("orderNotificationType") or
-            "IPN_CHANGE"  # Default
+            None
         )
+        
+        # Normalize the notification type if present
+        if order_notification_type:
+            order_notification_type = order_notification_type.upper().replace("_", "")
+        else:
+            # Only use default if Pesapal didn't send it (should rarely happen)
+            order_notification_type = "IPNCHANGE"
+            logger.warning("OrderNotificationType not found in webhook data (GET), using default: IPNCHANGE")
         
         # Process webhook only if we have required data
         ipn_status = 500
@@ -318,8 +327,9 @@ async def pesapal_webhook_get(
         
         # Return IPN response in Pesapal v3 format
         # Format: {"orderNotificationType":"IPNCHANGE","orderTrackingId":"...","orderMerchantReference":"...","status":200}
+        # Use the actual value from Pesapal, not hardcoded
         return {
-            "orderNotificationType": order_notification_type.upper().replace("_", ""),
+            "orderNotificationType": order_notification_type,
             "orderTrackingId": order_tracking_id or "",
             "orderMerchantReference": order_merchant_reference or "",
             "status": ipn_status
