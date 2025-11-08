@@ -3,7 +3,7 @@ from fastapi import FastAPI
 
 from app.config.settings import settings
 from app.database.db import connect_to_mongo, close_mongo_connection
-from app.routers import todos
+from app.routers import payments, webhooks
 
 
 @asynccontextmanager
@@ -24,7 +24,8 @@ app = FastAPI(
 )
 
 # Include routers
-app.include_router(todos.router)
+app.include_router(payments.router)
+app.include_router(webhooks.router)
 
 
 @app.get("/")

@@ -14,15 +14,23 @@ class Settings(BaseSettings):
     mongodb_url: Optional[str] = None
     mongodb_db_name: str = "sdk_payments"
     
+    # Pesapal Settings
+    pesapal_consumer_key: Optional[str] = None
+    pesapal_consumer_secret: Optional[str] = None
+    pesapal_sandbox: bool = True
+    pesapal_callback_url: Optional[str] = None
+    pesapal_ipn_url: Optional[str] = None
+    
     # API Settings
-    api_title: str = "SDK Payments API"
+    api_title: str = "Pesapal Payment SDK API"
     api_version: str = "1.0.0"
-    api_description: str = "Payment processing SDK API with Todo CRUD operations"
+    api_description: str = "Payment processing API using Pesapal SDK"
     
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
         case_sensitive = False
+        extra = "ignore"  # Ignore extra environment variables not in this model
 
 
 # Load settings
@@ -47,7 +55,7 @@ def log_configuration():
         print(f"   Database: {settings.mongodb_db_name}")
     
     if has_placeholder:
-        print("   ⚠️  Warning: Placeholder password detected - update MONGODB_URL in .env")
+        print("  ⚠️  Warning: Placeholder password detected - update MONGODB_URL in .env")
 
 
 # Log configuration

@@ -4,14 +4,13 @@ python-dotenv
 motor
 pymongo
 pydantic-settings
-psycopg2-binary
+httpx
 python-jose[cryptography]
 python-multipart
 python-dateutil
 email-validator
 pytest
 pytest-asyncio
-requests
 alembic
 sqlalchemy
 

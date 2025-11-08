@@ -1,0 +1,33 @@
+"""Pesapal API constants and endpoints."""
+
+# API Base URLs
+PESAPAL_SANDBOX_BASE_URL = "https://cybqa.pesapal.com/pesapalv3"
+PESAPAL_PRODUCTION_BASE_URL = "https://pay.pesapal.com/v3"
+
+# API Endpoints
+ENDPOINT_SUBMIT_ORDER = "/api/Transactions/SubmitOrderRequest"
+ENDPOINT_GET_STATUS = "/api/Transactions/GetTransactionStatus"
+ENDPOINT_IPN_REGISTER = "/api/URLSetup/RegisterIPN"
+
+# Payment Status Codes
+STATUS_PENDING = "PENDING"
+STATUS_COMPLETED = "COMPLETED"
+STATUS_FAILED = "FAILED"
+STATUS_INVALID = "INVALID"
+
+# Supported Currencies
+CURRENCY_KES = "KES"  # Kenyan Shilling
+CURRENCY_TZS = "TZS"  # Tanzanian Shilling
+CURRENCY_UGX = "UGX"  # Ugandan Shilling
+CURRENCY_RWF = "RWF"  # Rwandan Franc
+CURRENCY_USD = "USD"  # US Dollar
+
+SUPPORTED_CURRENCIES = [CURRENCY_KES, CURRENCY_TZS, CURRENCY_UGX, CURRENCY_RWF, CURRENCY_USD]
+
+# Payment Methods
+PAYMENT_METHOD_MOBILE_MONEY = "MOBILE_MONEY"
+PAYMENT_METHOD_CARD = "CARD"
+PAYMENT_METHOD_BANK = "BANK"
+
+SUPPORTED_PAYMENT_METHODS = [PAYMENT_METHOD_MOBILE_MONEY, PAYMENT_METHOD_CARD, PAYMENT_METHOD_BANK]
+
