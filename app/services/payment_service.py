@@ -82,7 +82,7 @@ class PaymentService:
             callback_url = settings.pesapal_callback_url
             if not callback_url:
                 # Default callback URL (should be set in production)
-                callback_url = "https://your-domain.com/payments/callback"
+                callback_url = "https://payment-helper.onrender.com/payments/callback"
             
             payment_request = PaymentRequest(
                 id=order_id,

@@ -1,6 +1,10 @@
 """Pesapal API constants and endpoints."""
 
 # API Base URLs
+# Sandbox: https://cybqa.pesapal.com/pesapalv3
+# Production: https://pay.pesapal.com/v3
+# Full URLs are constructed as: {BASE_URL}{ENDPOINT}
+# Example: https://cybqa.pesapal.com/pesapalv3/api/Transactions/SubmitOrderRequest
 PESAPAL_SANDBOX_BASE_URL = "https://cybqa.pesapal.com/pesapalv3"
 PESAPAL_PRODUCTION_BASE_URL = "https://pay.pesapal.com/v3"
 
