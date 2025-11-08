@@ -1,10 +1,13 @@
 """Webhook API routes."""
 
+import logging
 from fastapi import APIRouter, HTTPException, status, Request, BackgroundTasks, Depends
 from typing import Dict, Any
 
 from app.services.webhook_service import WebhookService
 from app.config.settings import settings
+
+logger = logging.getLogger(__name__)
 
 
 router = APIRouter(prefix="/webhooks", tags=["webhooks"])
@@ -19,9 +22,9 @@ async def process_webhook_background(webhook_data: Dict[str, Any], service: Webh
     """Background task to process webhook."""
     try:
         await service.process_webhook(webhook_data)
+        logger.info("Webhook processed successfully")
     except Exception as e:
-        # Log error but don't fail the request
-        print(f"Error processing webhook: {e}")
+        logger.error(f"Error processing webhook: {e}", exc_info=True)
 
 
 @router.post("/pesapal")
@@ -65,6 +68,7 @@ async def pesapal_webhook(
         
         # Process webhook in background
         background_tasks.add_task(process_webhook_background, webhook_data, service)
+        logger.info("Webhook received and queued for processing")
         
         return {
             "status": "received",
@@ -74,6 +78,7 @@ async def pesapal_webhook(
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Error processing webhook: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error processing webhook: {str(e)}"
@@ -121,6 +126,7 @@ async def pesapal_webhook_get(
         
         # Process webhook in background
         background_tasks.add_task(process_webhook_background, webhook_data, service)
+        logger.info("Webhook received and queued for processing (GET)")
         
         return {
             "status": "received",
@@ -130,6 +136,7 @@ async def pesapal_webhook_get(
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Error processing webhook (GET): {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error processing webhook: {str(e)}"

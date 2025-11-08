@@ -1,5 +1,6 @@
 """Webhook processing service."""
 
+import logging
 from typing import Dict, Any
 from datetime import datetime
 
@@ -8,6 +9,8 @@ from pesapal.exceptions import PesapalError
 
 from app.repositories.payment_repository import PaymentRepository
 from app.config.settings import settings
+
+logger = logging.getLogger(__name__)
 
 
 class WebhookService:
@@ -55,7 +58,7 @@ class WebhookService:
             payment = await self.repository.get_by_order_id(order_merchant_reference)
         
         if not payment:
-            # Log unknown payment
+            logger.warning(f"Webhook received for unknown payment: tracking_id={order_tracking_id}, order_id={order_merchant_reference}")
             return False
         
         # Determine status based on notification type
@@ -75,5 +78,6 @@ class WebhookService:
             webhook_data.get("ConfirmationCode")
         )
         
+        logger.info(f"Payment status updated via webhook: order_id={payment.order_id}, status={new_status}")
         return True
 

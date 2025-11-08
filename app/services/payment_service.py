@@ -1,7 +1,9 @@
 """Payment service layer."""
 
+import logging
 from typing import Optional
 from decimal import Decimal
+from datetime import datetime
 
 from pesapal import PesapalClient
 from pesapal.models import PaymentRequest, PaymentResponse, PaymentStatus
@@ -10,6 +12,8 @@ from pesapal.exceptions import PesapalError
 from app.repositories.payment_repository import PaymentRepository
 from app.models.payment import Payment
 from app.config.settings import settings
+
+logger = logging.getLogger(__name__)
 
 
 class PaymentService:
@@ -121,8 +125,9 @@ class PaymentService:
             payment.redirect_url = response.redirect_url
             payment.status = response.status or "PENDING"
             
+            logger.info(f"Payment initiated successfully: order_id={order_id}, tracking_id={payment.order_tracking_id}")
+            
             # Update in database
-            from datetime import datetime
             await self.repository.collection.update_one(
                 {"_id": payment._id},
                 {"$set": {
@@ -136,10 +141,6 @@ class PaymentService:
             return payment
             
         except PesapalError as e:
-            # Update payment status to failed
-            from datetime import datetime
-            import logging
-            logger = logging.getLogger(__name__)
             logger.error(f"Pesapal API error for order {order_id}: {str(e)}")
             await self.repository.collection.update_one(
                 {"_id": payment._id},
@@ -147,10 +148,6 @@ class PaymentService:
             )
             raise ValueError(f"Failed to initiate payment with Pesapal: {str(e)}")
         except Exception as e:
-            # Catch any other errors
-            from datetime import datetime
-            import logging
-            logger = logging.getLogger(__name__)
             logger.error(f"Unexpected error initiating payment for order {order_id}: {str(e)}", exc_info=True)
             await self.repository.collection.update_one(
                 {"_id": payment._id},
@@ -191,10 +188,11 @@ class PaymentService:
                 status.confirmation_code
             )
             
+            logger.info(f"Payment status checked: order_id={order_id}, status={new_status}")
             return updated or payment
             
         except PesapalError as e:
-            # Return current payment status if check fails
+            logger.warning(f"Failed to check payment status for order {order_id}: {str(e)}")
             return payment
     
     async def get_payment(self, order_id: str) -> Optional[Payment]:

@@ -1,3 +1,4 @@
+import logging
 from typing import Optional
 from pathlib import Path
 
@@ -5,6 +6,8 @@ try:
     from pydantic_settings import BaseSettings
 except ImportError:
     from pydantic import BaseSettings
+
+logger = logging.getLogger(__name__)
 
 
 class Settings(BaseSettings):
@@ -49,21 +52,29 @@ def log_configuration():
         has_placeholder = "<db_password>" in settings.mongodb_url or "YOUR_PASSWORD" in settings.mongodb_url
     
     # Log configuration
-    print("📋 Configuration:")
-    print(f"   Environment: {'✅ .env file loaded' if env_exists else '⚠️  Using environment variables'}")
-    print(f"   MongoDB: {'✅ Configured' if settings.mongodb_url and not has_placeholder else '❌ Not configured'}")
-    if settings.mongodb_url:
-        print(f"   Database: {settings.mongodb_db_name}")
+    if env_exists:
+        logger.info("Configuration loaded from .env file")
+    else:
+        logger.info("Configuration loaded from environment variables")
+    
+    if settings.mongodb_url and not has_placeholder:
+        logger.info(f"MongoDB configured: {settings.mongodb_db_name}")
+    elif not settings.mongodb_url:
+        logger.warning("MongoDB not configured")
+    else:
+        logger.warning("MongoDB URL contains placeholder password")
     
     # Check Pesapal configuration
     pesapal_configured = settings.pesapal_consumer_key and settings.pesapal_consumer_secret
-    print(f"   Pesapal: {'✅ Configured' if pesapal_configured and settings.pesapal_ipn_id else '❌ Not configured'}")
-    if pesapal_configured and not settings.pesapal_ipn_id:
-        print("   ⚠️  Warning: PESAPAL_IPN_ID not set - required for API 3.0")
-        print("      Register an IPN URL in Pesapal dashboard to get an IPN ID")
+    if pesapal_configured and settings.pesapal_ipn_id:
+        logger.info("Pesapal configured and ready")
+    elif pesapal_configured:
+        logger.warning("PESAPAL_IPN_ID not set - required for API 3.0")
+    else:
+        logger.warning("Pesapal not configured")
     
     if has_placeholder:
-        print("  ⚠️  Warning: Placeholder password detected - update MONGODB_URL in .env")
+        logger.warning("MONGODB_URL contains placeholder password - update in .env")
 
 
 # Log configuration

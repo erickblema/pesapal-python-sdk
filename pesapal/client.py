@@ -1,5 +1,6 @@
 """Pesapal API client."""
 
+import logging
 import httpx
 from typing import Optional
 from decimal import Decimal
@@ -18,7 +19,8 @@ from pesapal.exceptions import (
     PesapalNetworkError,
     PesapalValidationError,
 )
-from pesapal.utils import generate_signature
+
+logger = logging.getLogger(__name__)
 
 
 class PesapalClient:
@@ -106,9 +108,7 @@ class PesapalClient:
                     status_code=response.status_code
                 )
             
-            if self.sandbox:
-                print(f"✅ OAuth token obtained successfully")
-            
+            logger.info("OAuth token obtained successfully")
             return self._access_token
             
         except httpx.RequestError as e:
@@ -179,13 +179,10 @@ class PesapalClient:
                 except:
                     error_msg = response.text or "Authentication failed. Check your consumer key and secret."
                 
-                # Debug info in sandbox
-                if self.sandbox:
-                    print(f"❌ Authentication Error Details:")
-                    print(f"   Status: {response.status_code}")
-                    print(f"   Response: {error_msg}")
-                    print(f"   URL: {url}")
-                    print(f"   Consumer Key: {self.consumer_key[:10]}..." if self.consumer_key else "   Consumer Key: NOT SET")
+                logger.error(
+                    f"Authentication failed: {error_msg}",
+                    extra={"status_code": response.status_code, "url": url}
+                )
                 
                 raise PesapalAuthenticationError(
                     f"Authentication failed: {error_msg}. Check your consumer key and secret.",
@@ -207,15 +204,7 @@ class PesapalClient:
                 )
             
             response_data = response.json()
-            
-            # Log response for debugging (remove sensitive data)
-            if self.sandbox:
-                print(f"🔍 Pesapal API Response: {response.status_code}")
-                print(f"   Response keys: {list(response_data.keys())}")
-                # Print response (mask sensitive data)
-                safe_response = {k: v for k, v in response_data.items() if 'secret' not in k.lower() and 'key' not in k.lower()}
-                print(f"   Response data: {safe_response}")
-            
+            logger.debug(f"Pesapal API response: {response.status_code} - {endpoint}")
             return response_data
             
         except httpx.RequestError as e:
@@ -264,30 +253,21 @@ class PesapalClient:
         if payment_request.notification_id:
             request_data["notification_id"] = payment_request.notification_id
         else:
-            # If not provided, this will cause an error from Pesapal
-            if self.sandbox:
-                print("⚠️  Warning: notification_id not provided in payment request")
+            logger.warning("notification_id not provided in payment request")
         
         if payment_request.billing_address:
             request_data["billing_address"] = payment_request.billing_address
         
-        # Debug in sandbox
-        if self.sandbox:
-            print(f"🔍 Submitting order to Pesapal:")
-            print(f"   Order ID: {payment_request.id}")
-            print(f"   Amount: {request_data['amount']} {request_data['currency']}")
-            print(f"   Callback URL: {request_data['callback_url']}")
+        logger.info(
+            f"Submitting payment order: {payment_request.id} - "
+            f"{request_data['amount']} {request_data['currency']}"
+        )
         
         # Use Bearer token authentication
         headers = self._get_headers(include_auth=True)
         
         # Make API request
         response_data = await self._request("POST", ENDPOINT_SUBMIT_ORDER, data=request_data, custom_headers=headers)
-        
-        # Debug: Log full response
-        if self.sandbox:
-            print(f"📦 Full Pesapal Response:")
-            print(f"   {response_data}")
         
         # Handle different response formats from Pesapal API v3
         # Pesapal might return different field names, so we need to map them
@@ -324,11 +304,10 @@ class PesapalClient:
                     response_data=response_data
                 )
             
-            # Log the actual response for debugging
-            if self.sandbox:
-                print(f"❌ Response missing required fields:")
-                print(f"   Response keys: {list(response_data.keys())}")
-                print(f"   Full response: {response_data}")
+            logger.error(
+                f"Invalid Pesapal response: Missing order_tracking_id and redirect_url",
+                extra={"response_keys": list(response_data.keys())}
+            )
             
             raise PesapalAPIError(
                 f"Invalid response from Pesapal API: Missing order_tracking_id and redirect_url. "
@@ -340,11 +319,10 @@ class PesapalClient:
         try:
             return PaymentResponse(**mapped_response)
         except Exception as e:
-            # If parsing fails, log the actual response and raise
-            if self.sandbox:
-                print(f"❌ Failed to parse response: {e}")
-                print(f"   Expected fields: order_tracking_id, merchant_reference, redirect_url")
-                print(f"   Actual response: {response_data}")
+            logger.error(
+                f"Failed to parse Pesapal response: {e}",
+                extra={"response_data": response_data}
+            )
             raise PesapalAPIError(
                 f"Unexpected response format from Pesapal API: {response_data}",
                 response_data=response_data
