@@ -4,6 +4,7 @@ import logging
 from fastapi import APIRouter, HTTPException, status, Depends, Request
 from typing import List, Optional
 from decimal import Decimal
+from datetime import datetime
 
 from app.schema.payment import PaymentCreateRequest, PaymentResponse, PaymentStatusResponse
 from app.services.payment_service import PaymentService
@@ -136,6 +137,20 @@ async def payment_callback(
                 detail=f"Payment not found for tracking ID: {order_tracking_id or order_merchant_reference}"
             )
         
+        # Add callback received event
+        callback_event = {
+            "event_type": "CALLBACK_RECEIVED",
+            "status": payment.status,
+            "source": "CALLBACK",
+            "metadata": {
+                "order_tracking_id": order_tracking_id,
+                "order_notification_type": order_notification_type,
+                "order_merchant_reference": order_merchant_reference
+            },
+            "timestamp": datetime.utcnow()
+        }
+        await service.repository.add_event(payment.order_id, callback_event)
+        
         # Automatically fetch fresh status from Pesapal (as per Pesapal docs)
         try:
             updated_payment = await service.check_payment_status(payment.order_id)
@@ -144,15 +159,36 @@ async def payment_callback(
             logger.error(f"Error fetching payment status from Pesapal: {e}")
             # Continue with existing payment data if status check fails
         
-        # Return payment status information
+        # Get updated payment with events
+        updated_payment = await service.get_payment(payment.order_id)
+        
+        # Return payment status information with event history
         # In a real app, you'd redirect to a success/failure page
-        return {
+        response_data = {
             "message": "Payment callback received",
-            "order_id": payment.order_id,
-            "order_tracking_id": payment.order_tracking_id,
-            "status": payment.status,
-            "redirect_url": payment.redirect_url
+            "order_id": updated_payment.order_id,
+            "order_tracking_id": updated_payment.order_tracking_id,
+            "status": updated_payment.status,
+            "redirect_url": updated_payment.redirect_url,
+            "payment_method": updated_payment.payment_method,
+            "confirmation_code": updated_payment.confirmation_code
         }
+        
+        # Include event history if available
+        if updated_payment.events:
+            from app.schema.payment import PaymentEventResponse
+            response_data["events"] = [
+                {
+                    "event_type": event.event_type,
+                    "status": event.status,
+                    "source": event.source,
+                    "metadata": event.metadata,
+                    "timestamp": event.timestamp.isoformat()
+                }
+                for event in updated_payment.events
+            ]
+        
+        return response_data
         
     except HTTPException:
         raise
@@ -211,13 +247,29 @@ async def check_payment_status(
     try:
         payment = await service.check_payment_status(order_id)
         
+        from app.schema.payment import PaymentEventResponse
+        
+        events = None
+        if payment.events:
+            events = [
+                PaymentEventResponse(
+                    event_type=event.event_type,
+                    status=event.status,
+                    source=event.source,
+                    metadata=event.metadata,
+                    timestamp=event.timestamp
+                )
+                for event in payment.events
+            ]
+        
         return PaymentStatusResponse(
             order_id=payment.order_id,
             status=payment.status,
             order_tracking_id=payment.order_tracking_id,
             payment_method=payment.payment_method,
             confirmation_code=payment.confirmation_code,
-            updated_at=payment.updated_at
+            updated_at=payment.updated_at,
+            events=events
         )
     except ValueError as e:
         raise HTTPException(
@@ -259,13 +311,29 @@ async def get_transaction_status(
         # Get fresh status from Pesapal
         updated_payment = await service.check_payment_status(payment.order_id)
         
+        from app.schema.payment import PaymentEventResponse
+        
+        events = None
+        if updated_payment.events:
+            events = [
+                PaymentEventResponse(
+                    event_type=event.event_type,
+                    status=event.status,
+                    source=event.source,
+                    metadata=event.metadata,
+                    timestamp=event.timestamp
+                )
+                for event in updated_payment.events
+            ]
+        
         return PaymentStatusResponse(
             order_id=updated_payment.order_id,
             status=updated_payment.status,
             order_tracking_id=updated_payment.order_tracking_id,
             payment_method=updated_payment.payment_method,
             confirmation_code=updated_payment.confirmation_code,
-            updated_at=updated_payment.updated_at
+            updated_at=updated_payment.updated_at,
+            events=events
         )
     except HTTPException:
         raise

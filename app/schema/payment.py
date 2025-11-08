@@ -1,7 +1,7 @@
 """Pydantic schemas for payment API."""
 
 from pydantic import BaseModel, Field, model_serializer
-from typing import Optional, Any
+from typing import Optional, Any, List, Dict
 from datetime import datetime
 from decimal import Decimal
 
@@ -59,6 +59,15 @@ class PaymentResponse(BaseModel):
         }
 
 
+class PaymentEventResponse(BaseModel):
+    """Schema for payment event in history."""
+    event_type: str = Field(..., description="Event type (CREATED, STATUS_CHANGED, CALLBACK_RECEIVED, etc.)")
+    status: str = Field(..., description="Status at time of event")
+    source: str = Field(..., description="Event source (CREATION, CALLBACK, WEBHOOK, MANUAL_CHECK)")
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="Event metadata")
+    timestamp: datetime = Field(..., description="Event timestamp")
+
+
 class PaymentStatusResponse(BaseModel):
     """Schema for payment status check response."""
     order_id: str = Field(..., description="Order identifier")
@@ -67,4 +76,5 @@ class PaymentStatusResponse(BaseModel):
     payment_method: Optional[str] = Field(None, description="Payment method")
     confirmation_code: Optional[str] = Field(None, description="Confirmation code")
     updated_at: datetime = Field(..., description="Last update timestamp")
+    events: Optional[List[PaymentEventResponse]] = Field(None, description="Payment event history")
 

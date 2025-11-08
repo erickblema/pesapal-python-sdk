@@ -79,6 +79,19 @@ class PaymentService:
             billing_address=billing_address
         )
         
+        # Add creation event
+        payment.add_event(
+            event_type="CREATED",
+            status="PENDING",
+            source="CREATION",
+            metadata={
+                "order_id": order_id,
+                "amount": str(amount),
+                "currency": currency,
+                "description": description
+            }
+        )
+        
         # Save to database
         payment = await self.repository.create(payment)
         
@@ -124,21 +137,37 @@ class PaymentService:
                 )
             
             # Update payment with tracking ID and redirect URL
+            old_status = payment.status
             payment.order_tracking_id = response.order_tracking_id
             payment.redirect_url = response.redirect_url
-            payment.status = response.status or "PENDING"
+            payment.status = response.status or "200"  # Pesapal returns "200" for successful creation
+            
+            # Add event for Pesapal submission
+            payment.add_event(
+                event_type="SUBMITTED_TO_PESAPAL",
+                status=payment.status,
+                source="CREATION",
+                metadata={
+                    "order_tracking_id": payment.order_tracking_id,
+                    "redirect_url": payment.redirect_url,
+                    "pesapal_status": response.status
+                }
+            )
             
             logger.info(f"Payment initiated successfully: order_id={order_id}, tracking_id={payment.order_tracking_id}")
             
-            # Update in database
+            # Update in database with events
             await self.repository.collection.update_one(
                 {"_id": payment._id},
-                {"$set": {
-                    "order_tracking_id": payment.order_tracking_id,
-                    "redirect_url": payment.redirect_url,
-                    "status": payment.status,
-                    "updated_at": datetime.utcnow()
-                }}
+                {
+                    "$set": {
+                        "order_tracking_id": payment.order_tracking_id,
+                        "redirect_url": payment.redirect_url,
+                        "status": payment.status,
+                        "updated_at": datetime.utcnow()
+                    },
+                    "$push": {"events": payment.events[-1].to_dict()}
+                }
             )
             
             return payment
@@ -183,15 +212,36 @@ class PaymentService:
             )
             
             # Update payment status
+            old_status = payment.status
             new_status = status.status_code or payment.status
+            
+            # Add event for status check
+            event_metadata = {
+                "old_status": old_status,
+                "new_status": new_status,
+                "payment_method": status.payment_method,
+                "confirmation_code": status.confirmation_code,
+                "pesapal_status_description": status.payment_status_description,
+                "message": status.message
+            }
+            
+            event = {
+                "event_type": "STATUS_CHECKED",
+                "status": new_status,
+                "source": "MANUAL_CHECK",
+                "metadata": event_metadata,
+                "timestamp": datetime.utcnow()
+            }
+            
             updated = await self.repository.update_status(
                 order_id,
                 new_status,
                 status.payment_method,
-                status.confirmation_code
+                status.confirmation_code,
+                event=event
             )
             
-            logger.info(f"Payment status checked: order_id={order_id}, status={new_status}")
+            logger.info(f"Payment status checked: order_id={order_id}, status={old_status} -> {new_status}")
             return updated or payment
             
         except PesapalError as e:

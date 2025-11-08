@@ -108,21 +108,45 @@ class WebhookService:
             logger.warning(f"Webhook received for unknown payment: tracking_id={order_tracking_id}, order_id={order_merchant_reference}")
             return False
         
+        # Add webhook received event
+        webhook_event = {
+            "event_type": "WEBHOOK_RECEIVED",
+            "status": payment.status,
+            "source": "WEBHOOK",
+            "metadata": {
+                "order_tracking_id": order_tracking_id,
+                "order_notification_type": order_notification_type,
+                "order_merchant_reference": order_merchant_reference,
+                "webhook_data": webhook_data
+            },
+            "timestamp": datetime.utcnow()
+        }
+        await self.repository.add_event(payment.order_id, webhook_event)
+        
         # IMPORTANT: IPN does NOT contain payment status (as per Pesapal docs)
         # We must call GetTransactionStatus API to get the actual status
         try:
             logger.info(f"Fetching payment status from Pesapal for order_id={payment.order_id}")
+            old_status = payment.status
             updated_payment = await self.payment_service.check_payment_status(payment.order_id)
             
-            # Update payment with fresh data from Pesapal
-            await self.repository.update_status(
-                updated_payment.order_id,
-                updated_payment.status,
-                updated_payment.payment_method,
-                updated_payment.confirmation_code
-            )
+            # Add status updated event
+            status_update_event = {
+                "event_type": "STATUS_UPDATED_VIA_WEBHOOK",
+                "status": updated_payment.status,
+                "source": "WEBHOOK",
+                "metadata": {
+                    "old_status": old_status,
+                    "new_status": updated_payment.status,
+                    "payment_method": updated_payment.payment_method,
+                    "confirmation_code": updated_payment.confirmation_code,
+                    "triggered_by": "GetTransactionStatus API"
+                },
+                "timestamp": datetime.utcnow()
+            }
+            await self.repository.add_event(payment.order_id, status_update_event)
             
-            logger.info(f"Payment status updated via webhook: order_id={payment.order_id}, status={updated_payment.status}")
+            logger.info(f"Payment status updated via webhook: order_id={payment.order_id}, status={old_status} -> {updated_payment.status}")
             return True
         except Exception as e:
             logger.error(f"Error fetching payment status from Pesapal: {e}")
