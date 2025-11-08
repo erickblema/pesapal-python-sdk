@@ -10,7 +10,9 @@ from pesapal.models import PaymentRequest, PaymentResponse, PaymentStatus
 from pesapal.exceptions import PesapalError
 
 from app.repositories.payment_repository import PaymentRepository
+from app.repositories.transaction_repository import TransactionRepository
 from app.models.payment import Payment
+from app.models.transaction import Transaction, TransactionType, TransactionStatus
 from app.config.settings import settings
 
 logger = logging.getLogger(__name__)
@@ -21,6 +23,7 @@ class PaymentService:
     
     def __init__(self):
         self.repository = PaymentRepository()
+        self.transaction_repository = TransactionRepository()
         self._client: Optional[PesapalClient] = None
     
     def _get_client(self) -> PesapalClient:
@@ -141,6 +144,20 @@ class PaymentService:
             payment.order_tracking_id = response.order_tracking_id
             payment.redirect_url = response.redirect_url
             payment.status = response.status or "200"  # Pesapal returns "200" for successful creation
+            payment.provider_response = response.model_dump()
+            
+            # Add status change
+            payment.add_status_change(
+                old_status=old_status,
+                new_status=payment.status,
+                source="CREATION",
+                reason="Submitted to Pesapal",
+                metadata={
+                    "order_tracking_id": payment.order_tracking_id,
+                    "redirect_url": payment.redirect_url,
+                    "pesapal_status": response.status
+                }
+            )
             
             # Add event for Pesapal submission
             payment.add_event(
@@ -154,9 +171,27 @@ class PaymentService:
                 }
             )
             
+            # Create transaction record
+            transaction = Transaction(
+                payment_id=order_id,
+                transaction_type=TransactionType.PAYMENT.value,
+                amount=amount,
+                currency=currency,
+                status=TransactionStatus.PENDING.value,
+                transaction_reference=payment.order_tracking_id,
+                payment_provider="PESAPAL",
+                description=description,
+                metadata={
+                    "redirect_url": payment.redirect_url,
+                    "pesapal_response": response.model_dump()
+                },
+                initiated_by="SYSTEM"
+            )
+            await self.transaction_repository.create(transaction)
+            
             logger.info(f"Payment initiated successfully: order_id={order_id}, tracking_id={payment.order_tracking_id}")
             
-            # Update in database with events
+            # Update in database with events and status history
             await self.repository.collection.update_one(
                 {"_id": payment._id},
                 {
@@ -164,6 +199,8 @@ class PaymentService:
                         "order_tracking_id": payment.order_tracking_id,
                         "redirect_url": payment.redirect_url,
                         "status": payment.status,
+                        "provider_response": payment.provider_response,
+                        "status_history": payment.status_history,
                         "updated_at": datetime.utcnow()
                     },
                     "$push": {"events": payment.events[-1].to_dict()}
@@ -215,6 +252,27 @@ class PaymentService:
             old_status = payment.status
             new_status = status.status_code or payment.status
             
+            # Update payment fields
+            payment.payment_method = status.payment_method
+            payment.confirmation_code = status.confirmation_code
+            payment.last_status_check = datetime.utcnow()
+            payment.provider_response.update(status.model_dump())
+            
+            # Add status change if status changed
+            if old_status != new_status:
+                payment.add_status_change(
+                    old_status=old_status,
+                    new_status=new_status,
+                    source="MANUAL_CHECK",
+                    reason=status.payment_status_description or "Status checked from Pesapal",
+                    metadata={
+                        "payment_method": status.payment_method,
+                        "confirmation_code": status.confirmation_code,
+                        "pesapal_status_description": status.payment_status_description,
+                        "message": status.message
+                    }
+                )
+            
             # Add event for status check
             event_metadata = {
                 "old_status": old_status,
@@ -233,6 +291,18 @@ class PaymentService:
                 "timestamp": datetime.utcnow()
             }
             
+            # Update transaction if exists
+            transactions = await self.transaction_repository.get_by_payment_id(order_id)
+            if transactions:
+                main_transaction = transactions[0]  # Get the main payment transaction
+                transaction_status = TransactionStatus.COMPLETED.value if new_status == "200" else TransactionStatus.PROCESSING.value
+                await self.transaction_repository.update_status(
+                    main_transaction._id,
+                    transaction_status,
+                    status.confirmation_code,
+                    datetime.utcnow() if new_status == "200" else None
+                )
+            
             updated = await self.repository.update_status(
                 order_id,
                 new_status,
@@ -240,6 +310,21 @@ class PaymentService:
                 status.confirmation_code,
                 event=event
             )
+            
+            # Update status history and other fields
+            if updated:
+                await self.repository.collection.update_one(
+                    {"order_id": order_id},
+                    {
+                        "$set": {
+                            "payment_method": payment.payment_method,
+                            "confirmation_code": payment.confirmation_code,
+                            "last_status_check": payment.last_status_check,
+                            "provider_response": payment.provider_response,
+                            "status_history": payment.status_history
+                        }
+                    }
+                )
             
             logger.info(f"Payment status checked: order_id={order_id}, status={old_status} -> {new_status}")
             return updated or payment

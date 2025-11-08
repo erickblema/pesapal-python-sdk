@@ -137,6 +137,18 @@ async def payment_callback(
                 detail=f"Payment not found for tracking ID: {order_tracking_id or order_merchant_reference}"
             )
         
+        # Update payment callback flags
+        await service.repository.collection.update_one(
+            {"order_id": payment.order_id},
+            {
+                "$set": {
+                    "callback_received": True,
+                    "callback_received_at": datetime.utcnow(),
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
         # Add callback received event
         callback_event = {
             "event_type": "CALLBACK_RECEIVED",
@@ -159,24 +171,48 @@ async def payment_callback(
             logger.error(f"Error fetching payment status from Pesapal: {e}")
             # Continue with existing payment data if status check fails
         
-        # Get updated payment with events
+        # Get updated payment with events and transactions
         updated_payment = await service.get_payment(payment.order_id)
+        transactions = await service.transaction_repository.get_by_payment_id(payment.order_id)
         
-        # Return payment status information with event history
-        # In a real app, you'd redirect to a success/failure page
+        # Return comprehensive payment information
         response_data = {
             "message": "Payment callback received",
-            "order_id": updated_payment.order_id,
-            "order_tracking_id": updated_payment.order_tracking_id,
-            "status": updated_payment.status,
-            "redirect_url": updated_payment.redirect_url,
-            "payment_method": updated_payment.payment_method,
-            "confirmation_code": updated_payment.confirmation_code
+            "payment": {
+                "order_id": updated_payment.order_id,
+                "order_tracking_id": updated_payment.order_tracking_id,
+                "status": updated_payment.status,
+                "amount": str(updated_payment.amount),
+                "currency": updated_payment.currency,
+                "payment_method": updated_payment.payment_method,
+                "confirmation_code": updated_payment.confirmation_code,
+                "callback_received": updated_payment.callback_received,
+                "callback_received_at": updated_payment.callback_received_at.isoformat() if updated_payment.callback_received_at else None,
+                "webhook_received": updated_payment.webhook_received,
+                "webhook_received_at": updated_payment.webhook_received_at.isoformat() if updated_payment.webhook_received_at else None,
+                "last_status_check": updated_payment.last_status_check.isoformat() if updated_payment.last_status_check else None,
+                "created_at": updated_payment.created_at.isoformat(),
+                "updated_at": updated_payment.updated_at.isoformat()
+            },
+            "status_history": updated_payment.status_history,
+            "transactions": [
+                {
+                    "transaction_id": str(t._id),
+                    "transaction_type": t.transaction_type,
+                    "amount": str(t.amount),
+                    "currency": t.currency,
+                    "status": t.status,
+                    "payment_method": t.payment_method,
+                    "confirmation_code": t.confirmation_code,
+                    "processed_at": t.processed_at.isoformat() if t.processed_at else None,
+                    "created_at": t.created_at.isoformat()
+                }
+                for t in transactions
+            ]
         }
         
         # Include event history if available
         if updated_payment.events:
-            from app.schema.payment import PaymentEventResponse
             response_data["events"] = [
                 {
                     "event_type": event.event_type,
@@ -200,15 +236,23 @@ async def payment_callback(
         )
 
 
-@router.get("/{order_id}", response_model=PaymentResponse)
+@router.get("/{order_id}")
 async def get_payment(
     order_id: str,
+    include_transactions: bool = False,
     service: PaymentService = Depends(get_payment_service)
 ):
     """
-    Get payment details by order ID.
+    Get comprehensive payment details by order ID.
+    
+    Returns complete payment information including:
+    - Payment details
+    - Status history
+    - Event history
+    - Transaction history (if include_transactions=true)
     
     - **order_id**: Order identifier
+    - **include_transactions**: Include transaction history (default: false)
     """
     payment = await service.get_payment(order_id)
     
@@ -218,20 +262,68 @@ async def get_payment(
             detail=f"Payment not found: {order_id}"
         )
     
-    return PaymentResponse(
-        _id=str(payment._id),
-        order_id=payment.order_id,
-        amount=payment.amount,
-        currency=payment.currency,
-        description=payment.description,
-        status=payment.status,
-        order_tracking_id=payment.order_tracking_id,
-        redirect_url=payment.redirect_url,
-        payment_method=payment.payment_method,
-        confirmation_code=payment.confirmation_code,
-        created_at=payment.created_at,
-        updated_at=payment.updated_at
-    )
+    response_data = {
+        "payment": {
+            "_id": str(payment._id),
+            "order_id": payment.order_id,
+            "amount": str(payment.amount),
+            "currency": payment.currency,
+            "description": payment.description,
+            "status": payment.status,
+            "order_tracking_id": payment.order_tracking_id,
+            "redirect_url": payment.redirect_url,
+            "payment_method": payment.payment_method,
+            "confirmation_code": payment.confirmation_code,
+            "merchant_id": payment.merchant_id,
+            "branch": payment.branch,
+            "fees": str(payment.fees) if payment.fees else None,
+            "net_amount": str(payment.net_amount),
+            "total_amount": str(payment.total_amount),
+            "payment_provider": payment.payment_provider,
+            "callback_received": payment.callback_received,
+            "callback_received_at": payment.callback_received_at.isoformat() if payment.callback_received_at else None,
+            "webhook_received": payment.webhook_received,
+            "webhook_received_at": payment.webhook_received_at.isoformat() if payment.webhook_received_at else None,
+            "last_status_check": payment.last_status_check.isoformat() if payment.last_status_check else None,
+            "created_at": payment.created_at.isoformat(),
+            "updated_at": payment.updated_at.isoformat()
+        },
+        "status_history": payment.status_history,
+        "events": [
+            {
+                "event_type": event.event_type,
+                "status": event.status,
+                "source": event.source,
+                "metadata": event.metadata,
+                "timestamp": event.timestamp.isoformat()
+            }
+            for event in payment.events
+        ]
+    }
+    
+    # Include transactions if requested
+    if include_transactions:
+        transactions = await service.transaction_repository.get_by_payment_id(order_id)
+        response_data["transactions"] = [
+            {
+                "transaction_id": str(t._id),
+                "transaction_type": t.transaction_type,
+                "amount": str(t.amount),
+                "currency": t.currency,
+                "status": t.status,
+                "transaction_reference": t.transaction_reference,
+                "payment_method": t.payment_method,
+                "confirmation_code": t.confirmation_code,
+                "fees": str(t.fees) if t.fees else None,
+                "net_amount": str(t.net_amount),
+                "processed_at": t.processed_at.isoformat() if t.processed_at else None,
+                "settled_at": t.settled_at.isoformat() if t.settled_at else None,
+                "created_at": t.created_at.isoformat()
+            }
+            for t in transactions
+        ]
+    
+    return response_data
 
 
 @router.get("/{order_id}/status", response_model=PaymentStatusResponse)
@@ -347,6 +439,57 @@ async def get_transaction_status(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get transaction status: {str(e)}"
         )
+
+
+@router.get("/{order_id}/transactions")
+async def get_payment_transactions(
+    order_id: str,
+    service: PaymentService = Depends(get_payment_service)
+):
+    """
+    Get all transactions for a payment.
+    
+    Returns comprehensive transaction history including:
+    - Payment transactions
+    - Refunds
+    - Fees
+    - Status changes
+    
+    - **order_id**: Order identifier
+    """
+    payment = await service.get_payment(order_id)
+    if not payment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Payment not found: {order_id}"
+        )
+    
+    transactions = await service.transaction_repository.get_by_payment_id(order_id)
+    
+    return {
+        "payment_id": order_id,
+        "order_tracking_id": payment.order_tracking_id,
+        "total_transactions": len(transactions),
+        "transactions": [
+            {
+                "transaction_id": str(t._id),
+                "transaction_type": t.transaction_type,
+                "amount": str(t.amount),
+                "currency": t.currency,
+                "status": t.status,
+                "transaction_reference": t.transaction_reference,
+                "payment_method": t.payment_method,
+                "confirmation_code": t.confirmation_code,
+                "fees": str(t.fees) if t.fees else None,
+                "net_amount": str(t.net_amount),
+                "processed_at": t.processed_at.isoformat() if t.processed_at else None,
+                "settled_at": t.settled_at.isoformat() if t.settled_at else None,
+                "created_at": t.created_at.isoformat(),
+                "metadata": t.metadata
+            }
+            for t in transactions
+        ]
+    }
 
 
 @router.get("/", response_model=List[PaymentResponse])

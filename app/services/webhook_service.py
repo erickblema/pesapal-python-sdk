@@ -108,6 +108,18 @@ class WebhookService:
             logger.warning(f"Webhook received for unknown payment: tracking_id={order_tracking_id}, order_id={order_merchant_reference}")
             return False
         
+        # Update payment webhook flags
+        await self.repository.collection.update_one(
+            {"order_id": payment.order_id},
+            {
+                "$set": {
+                    "webhook_received": True,
+                    "webhook_received_at": datetime.utcnow(),
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
         # Add webhook received event
         webhook_event = {
             "event_type": "WEBHOOK_RECEIVED",

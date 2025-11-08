@@ -46,7 +46,7 @@ class PaymentEvent:
 
 
 class Payment:
-    """Payment document model with comprehensive event tracking."""
+    """Payment document model with comprehensive event tracking - Fintech grade."""
     
     def __init__(
         self,
@@ -61,7 +61,21 @@ class Payment:
         confirmation_code: Optional[str] = None,
         customer: Optional[dict] = None,
         billing_address: Optional[dict] = None,
+        merchant_id: Optional[str] = None,
+        branch: Optional[str] = None,
+        fees: Optional[Decimal] = None,
+        net_amount: Optional[Decimal] = None,
+        total_amount: Optional[Decimal] = None,  # amount + fees
+        payment_provider: str = "PESAPAL",
+        provider_response: Optional[dict] = None,  # Full response from provider
+        callback_received: bool = False,
+        callback_received_at: Optional[datetime] = None,
+        webhook_received: bool = False,
+        webhook_received_at: Optional[datetime] = None,
+        last_status_check: Optional[datetime] = None,
+        status_history: Optional[List[Dict[str, Any]]] = None,  # Status change history
         events: Optional[List[PaymentEvent]] = None,
+        metadata: Optional[Dict[str, Any]] = None,
         created_at: Optional[datetime] = None,
         updated_at: Optional[datetime] = None,
         _id: Optional[ObjectId] = None
@@ -78,7 +92,21 @@ class Payment:
         self.confirmation_code = confirmation_code
         self.customer = customer or {}
         self.billing_address = billing_address or {}
+        self.merchant_id = merchant_id
+        self.branch = branch
+        self.fees = fees
+        self.net_amount = net_amount or amount
+        self.total_amount = total_amount or amount
+        self.payment_provider = payment_provider
+        self.provider_response = provider_response or {}
+        self.callback_received = callback_received
+        self.callback_received_at = callback_received_at
+        self.webhook_received = webhook_received
+        self.webhook_received_at = webhook_received_at
+        self.last_status_check = last_status_check
+        self.status_history = status_history or []
         self.events = events or []
+        self.metadata = metadata or {}
         self.created_at = created_at or datetime.utcnow()
         self.updated_at = updated_at or datetime.utcnow()
     
@@ -95,6 +123,28 @@ class Payment:
         self.updated_at = datetime.utcnow()
         return event
     
+    def add_status_change(
+        self,
+        old_status: str,
+        new_status: str,
+        source: str,
+        reason: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None
+    ):
+        """Add a status change to history."""
+        status_entry = {
+            "old_status": old_status,
+            "new_status": new_status,
+            "source": source,
+            "reason": reason,
+            "metadata": metadata or {},
+            "timestamp": datetime.utcnow()
+        }
+        self.status_history.append(status_entry)
+        self.status = new_status
+        self.updated_at = datetime.utcnow()
+        return status_entry
+    
     def to_dict(self) -> dict:
         """Convert to dictionary for MongoDB."""
         data = {
@@ -109,7 +159,21 @@ class Payment:
             "confirmation_code": self.confirmation_code,
             "customer": self.customer,
             "billing_address": self.billing_address,
+            "merchant_id": self.merchant_id,
+            "branch": self.branch,
+            "fees": str(self.fees) if self.fees else None,
+            "net_amount": str(self.net_amount),
+            "total_amount": str(self.total_amount),
+            "payment_provider": self.payment_provider,
+            "provider_response": self.provider_response,
+            "callback_received": self.callback_received,
+            "callback_received_at": self.callback_received_at,
+            "webhook_received": self.webhook_received,
+            "webhook_received_at": self.webhook_received_at,
+            "last_status_check": self.last_status_check,
+            "status_history": self.status_history,
             "events": [event.to_dict() for event in self.events],
+            "metadata": self.metadata,
             "created_at": self.created_at,
             "updated_at": self.updated_at,
         }
@@ -137,7 +201,21 @@ class Payment:
             confirmation_code=data.get("confirmation_code"),
             customer=data.get("customer", {}),
             billing_address=data.get("billing_address", {}),
+            merchant_id=data.get("merchant_id"),
+            branch=data.get("branch"),
+            fees=Decimal(data["fees"]) if data.get("fees") else None,
+            net_amount=Decimal(data["net_amount"]) if data.get("net_amount") else Decimal(data["amount"]),
+            total_amount=Decimal(data["total_amount"]) if data.get("total_amount") else Decimal(data["amount"]),
+            payment_provider=data.get("payment_provider", "PESAPAL"),
+            provider_response=data.get("provider_response", {}),
+            callback_received=data.get("callback_received", False),
+            callback_received_at=data.get("callback_received_at"),
+            webhook_received=data.get("webhook_received", False),
+            webhook_received_at=data.get("webhook_received_at"),
+            last_status_check=data.get("last_status_check"),
+            status_history=data.get("status_history", []),
             events=events,
+            metadata=data.get("metadata", {}),
             created_at=data.get("created_at"),
             updated_at=data.get("updated_at"),
         )
