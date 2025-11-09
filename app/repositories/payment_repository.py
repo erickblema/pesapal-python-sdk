@@ -49,17 +49,28 @@ class PaymentRepository:
         if not current_payment:
             return None
         
+        # Update payment object fields to calculate payment_state correctly
+        current_payment.status = status
+        if payment_method is not None:
+            current_payment.payment_method = payment_method
+        if confirmation_code is not None:
+            current_payment.confirmation_code = confirmation_code
+        
+        # Calculate payment_state based on updated fields
+        current_payment.payment_state = current_payment.get_payment_state()
+        
         # Build update operation
         update_operation = {
             "$set": {
                 "status": status,
+                "payment_state": current_payment.payment_state,  # Save payment_state
                 "updated_at": datetime.utcnow()
             }
         }
         
-        if payment_method:
+        if payment_method is not None:
             update_operation["$set"]["payment_method"] = payment_method
-        if confirmation_code:
+        if confirmation_code is not None:
             update_operation["$set"]["confirmation_code"] = confirmation_code
         
         # Add event to events array if provided

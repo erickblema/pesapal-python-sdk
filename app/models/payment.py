@@ -86,6 +86,7 @@ class Payment:
         status_history: Optional[List[Dict[str, Any]]] = None,  # Status change history
         events: Optional[List[PaymentEvent]] = None,
         metadata: Optional[Dict[str, Any]] = None,
+        payment_state: Optional[str] = None,  # Clear payment state: PENDING, PROCESSING, COMPLETED, FAILED, CANCELLED
         created_at: Optional[datetime] = None,
         updated_at: Optional[datetime] = None,
         _id: Optional[ObjectId] = None
@@ -117,6 +118,8 @@ class Payment:
         self.status_history = status_history or []
         self.events = events or []
         self.metadata = metadata or {}
+        # Calculate payment_state if not provided, or use provided value
+        self.payment_state = payment_state or self.get_payment_state()
         self.created_at = created_at or datetime.utcnow()
         self.updated_at = updated_at or datetime.utcnow()
     
@@ -152,6 +155,8 @@ class Payment:
         }
         self.status_history.append(status_entry)
         self.status = new_status
+        # Update payment_state when status changes
+        self.payment_state = self.get_payment_state()
         self.updated_at = datetime.utcnow()
         return status_entry
     
@@ -209,12 +214,15 @@ class Payment:
     
     def to_dict(self) -> dict:
         """Convert to dictionary for MongoDB."""
+        # Ensure payment_state is up-to-date before saving
+        current_payment_state = self.get_payment_state()
         data = {
             "order_id": self.order_id,
             "amount": str(self.amount),
             "currency": self.currency,
             "description": self.description,
             "status": self.status,
+            "payment_state": current_payment_state,  # Save payment_state to database
             "order_tracking_id": self.order_tracking_id,
             "redirect_url": self.redirect_url,
             "payment_method": self.payment_method,
@@ -250,7 +258,7 @@ class Payment:
         if "events" in data and data["events"]:
             events = [PaymentEvent.from_dict(e) for e in data["events"]]
         
-        return cls(
+        payment = cls(
             _id=data.get("_id"),
             order_id=data["order_id"],
             amount=Decimal(data["amount"]),
@@ -278,7 +286,12 @@ class Payment:
             status_history=data.get("status_history", []),
             events=events,
             metadata=data.get("metadata", {}),
+            payment_state=data.get("payment_state"),  # Read payment_state from database if available
             created_at=data.get("created_at"),
             updated_at=data.get("updated_at"),
         )
+        # If payment_state wasn't in database, ensure it's set (will be calculated in __init__)
+        if not payment.payment_state:
+            payment.payment_state = payment.get_payment_state()
+        return payment
 

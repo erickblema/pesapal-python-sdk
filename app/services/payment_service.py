@@ -173,6 +173,9 @@ class PaymentService:
             
             logger.info(f"Payment initiated successfully: order_id={order_id}, tracking_id={payment.order_tracking_id}")
             
+            # Update payment_state before saving
+            payment.payment_state = payment.get_payment_state()
+            
             # Update in database with events and status history
             await self.repository.collection.update_one(
                 {"_id": payment._id},
@@ -181,6 +184,7 @@ class PaymentService:
                         "order_tracking_id": payment.order_tracking_id,
                         "redirect_url": payment.redirect_url,
                         "status": payment.status,
+                        "payment_state": payment.payment_state,  # Save payment_state
                         "provider_response": payment.provider_response,
                         "status_history": payment.status_history,
                         "updated_at": datetime.utcnow()
@@ -320,13 +324,17 @@ class PaymentService:
                 event=event
             )
             
+            # Update payment_state when status or payment_method/confirmation_code changes
+            payment.payment_state = payment.get_payment_state()
+            
             # Update status history and other fields (including payment_method even if None)
             # Always update these fields even if update_status returned None
             update_fields = {
                 "last_status_check": payment.last_status_check,
                 "provider_response": payment.provider_response,
                 "status_history": payment.status_history,
-                "status": new_status  # Ensure status is updated
+                "status": new_status,  # Ensure status is updated
+                "payment_state": payment.payment_state  # Save payment_state
             }
             
             # Always update payment_method (even if None, to clear old values)

@@ -1019,3 +1019,51 @@ ValueError: Invalid webhook data: missing OrderTrackingId or OrderMerchantRefere
 2025-11-09 17:14:34 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
 2025-11-09 17:14:34 - pesapal.client - INFO - Submitting payment order: TX-testing2 - 1000.0 TZS
 2025-11-09 17:14:35 - app.services.payment_service - INFO - Payment initiated successfully: order_id=TX-testing2, tracking_id=8af53716-dd0f-4396-9c4a-db1c2e8c4642
+2025-11-09 17:31:42 - main - INFO - Shutting down application...
+2025-11-09 17:31:42 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 17:31:42 - main - INFO - Application shut down
+2025-11-09 17:31:42 - main - INFO - Starting application...
+2025-11-09 17:31:44 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 17:31:44 - main - INFO - Application started successfully
+2025-11-09 17:31:44 - main - INFO - Starting application...
+2025-11-09 17:31:46 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 17:31:46 - main - INFO - Application started successfully
+2025-11-09 17:31:47 - main - INFO - Shutting down application...
+2025-11-09 17:31:48 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 17:31:48 - main - INFO - Application shut down
+2025-11-09 17:31:48 - main - INFO - Starting application...
+2025-11-09 17:31:50 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 17:31:50 - main - INFO - Application started successfully
+2025-11-09 17:31:53 - main - INFO - Shutting down application...
+2025-11-09 17:31:53 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 17:31:53 - main - INFO - Application shut down
+2025-11-09 17:31:53 - main - INFO - Starting application...
+2025-11-09 17:31:55 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 17:31:55 - main - INFO - Application started successfully
+2025-11-09 17:31:58 - main - INFO - Shutting down application...
+2025-11-09 17:31:58 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 17:31:58 - main - INFO - Application shut down
+2025-11-09 17:31:58 - main - INFO - Starting application...
+2025-11-09 17:32:00 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 17:32:00 - main - INFO - Application started successfully
+2025-11-09 17:32:00 - main - INFO - Shutting down application...
+2025-11-09 17:32:01 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 17:32:01 - main - INFO - Application shut down
+2025-11-09 17:32:01 - main - INFO - Starting application...
+2025-11-09 17:32:02 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 17:32:02 - main - INFO - Application started successfully
+2025-11-09 17:32:24 - main - INFO - Shutting down application...
+2025-11-09 17:32:24 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 17:32:24 - main - INFO - Application shut down
+2025-11-09 17:32:25 - main - INFO - Starting application...
+2025-11-09 17:32:26 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 17:32:26 - main - INFO - Application started successfully
+2025-11-09 17:32:39 - main - INFO - Shutting down application...
+2025-11-09 17:32:39 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 17:32:39 - main - INFO - Application shut down
+2025-11-09 17:32:39 - main - INFO - Starting application...
+2025-11-09 17:32:41 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 17:32:41 - main - INFO - Application started successfully
+2025-11-09 17:34:08 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
+2025-11-09 17:34:08 - pesapal.client - INFO - Submitting payment order: TX-testing3 - 1000.0 TZS
+2025-11-09 17:34:09 - app.services.payment_service - INFO - Payment initiated successfully: order_id=TX-testing3, tracking_id=4dabc4c9-6475-43e7-8a78-db1c25315042
