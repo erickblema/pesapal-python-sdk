@@ -980,3 +980,15 @@ ValueError: Invalid webhook data: missing OrderTrackingId or OrderMerchantRefere
 2025-11-09 16:23:40 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
 2025-11-09 16:23:40 - pesapal.client - INFO - Submitting payment order: TX-testing2 - 1000.0 TZS
 2025-11-09 16:23:41 - app.services.payment_service - INFO - Payment initiated successfully: order_id=TX-testing2, tracking_id=8af53716-dd0f-4396-9c4a-db1c2e8c4642
+2025-11-09 16:27:55 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
+2025-11-09 16:27:55 - pesapal.client - INFO - Submitting payment order: TX-testing3 - 1000.0 TZS
+2025-11-09 16:27:55 - app.services.payment_service - INFO - Payment initiated successfully: order_id=TX-testing3, tracking_id=4dabc4c9-6475-43e7-8a78-db1c25315042
+2025-11-09 16:41:56 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
+2025-11-09 16:41:56 - pesapal.client - INFO - Submitting payment order: TX-testing1 - 1000.0 TZS
+2025-11-09 16:41:56 - app.services.payment_service - INFO - Payment initiated successfully: order_id=TX-testing1, tracking_id=ebdd0e4f-f45b-4b4d-83c8-db1c143c3f6d
+2025-11-09 16:42:42 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
+2025-11-09 16:42:42 - pesapal.client - INFO - Submitting payment order: TX-testing2 - 1000.0 TZS
+2025-11-09 16:42:43 - app.services.payment_service - INFO - Payment initiated successfully: order_id=TX-testing2, tracking_id=8af53716-dd0f-4396-9c4a-db1c2e8c4642
+2025-11-09 16:45:18 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
+2025-11-09 16:45:18 - pesapal.client - INFO - Submitting payment order: TX-testing3 - 1000.0 TZS
+2025-11-09 16:45:18 - app.services.payment_service - INFO - Payment initiated successfully: order_id=TX-testing3, tracking_id=4dabc4c9-6475-43e7-8a78-db1c25315042
