@@ -54,7 +54,7 @@ class PesapalClient:
         self.timeout = timeout
         self._client = httpx.AsyncClient(timeout=timeout)
         self._access_token: Optional[str] = None
-        self._token_expires_at: Optional[datetime] = None  # Track token expiration (5 minutes lifetime)
+        self._token_expires_at: Optional[datetime] = None
     
     async def __aenter__(self):
         """Async context manager entry."""
@@ -83,11 +83,9 @@ class PesapalClient:
         Raises:
             PesapalAuthenticationError: If token request fails
         """
-        # Check if token exists and is still valid (with 30 second buffer)
         if not force_refresh and self._access_token and self._token_expires_at:
             if datetime.utcnow() < (self._token_expires_at - timedelta(seconds=30)):
                 return self._access_token
-            # Token expired or about to expire, clear it
             logger.info("Access token expired or about to expire, refreshing...")
             self._access_token = None
             self._token_expires_at = None
@@ -125,7 +123,6 @@ class PesapalClient:
                     status_code=response.status_code
                 )
             
-            # Set token expiration (5 minutes from now as per Pesapal docs)
             self._token_expires_at = datetime.utcnow() + timedelta(minutes=5)
             
             logger.info("OAuth token obtained successfully (expires in 5 minutes)")
@@ -194,9 +191,7 @@ class PesapalClient:
                 params=params
             )
             
-            # Handle authentication errors (401) - token may have expired
             if response.status_code == 401:
-                # Clear expired token
                 self._access_token = None
                 self._token_expires_at = None
                 
@@ -211,12 +206,9 @@ class PesapalClient:
                     extra={"status_code": response.status_code, "url": url}
                 )
                 
-                # If this was an authenticated request, try refreshing token once
                 if include_auth and not custom_headers:
                     logger.info("Attempting to refresh token and retry request...")
-                    # Get fresh token
                     await self._get_access_token(force_refresh=True)
-                    # Retry request with new token
                     headers = self._get_headers(include_auth=True)
                     response = await self._client.request(
                         method=method,
@@ -225,14 +217,12 @@ class PesapalClient:
                         json=data,
                         params=params
                     )
-                    # Continue with normal error handling below
                 else:
                     raise PesapalAuthenticationError(
                         f"Authentication failed: {error_msg}. Check your consumer key and secret.",
                         status_code=401
                     )
             
-            # Handle other errors
             if response.status_code >= 400:
                 try:
                     error_data = response.json()
@@ -271,49 +261,37 @@ class PesapalClient:
             PesapalValidationError: If request validation fails
             PesapalAPIError: If API returns an error
         """
-        # Validate request
         try:
             payment_request.model_validate(payment_request.model_dump())
         except Exception as e:
             raise PesapalValidationError(f"Invalid payment request: {str(e)}")
         
-        # Get OAuth access token (required for Pesapal API 3.0)
         token = await self._get_access_token()
         
-        # Prepare request data according to Pesapal API 3.0 format
-        # NOTE: Do NOT include consumer_key, consumer_secret, or signature in request body
-        # Authentication is done via Bearer token in Authorization header
         request_data = {
             "id": payment_request.id,
             "currency": payment_request.currency,
-            "amount": float(payment_request.amount),  # Pesapal expects number, not string
+            "amount": float(payment_request.amount),
             "description": payment_request.description,
             "callback_url": payment_request.callback_url,
         }
         
-        # Add required/optional fields
-        # notification_id is required for Pesapal API 3.0
         if payment_request.notification_id:
             request_data["notification_id"] = payment_request.notification_id
         else:
             logger.warning("notification_id not provided in payment request")
         
-        # Add optional redirect_mode (TOP_WINDOW or PARENT_WINDOW, default: TOP_WINDOW)
         if payment_request.redirect_mode:
             request_data["redirect_mode"] = payment_request.redirect_mode
         else:
-            # Default to TOP_WINDOW as per Pesapal docs
             request_data["redirect_mode"] = "TOP_WINDOW"
         
-        # Add optional cancellation_url
         if payment_request.cancellation_url:
             request_data["cancellation_url"] = payment_request.cancellation_url
         
-        # Add optional branch
         if payment_request.branch:
             request_data["branch"] = payment_request.branch
         
-        # billing_address is required by Pesapal (but we allow optional for flexibility)
         if payment_request.billing_address:
             request_data["billing_address"] = payment_request.billing_address
         else:
@@ -324,15 +302,9 @@ class PesapalClient:
             f"{request_data['amount']} {request_data['currency']}"
         )
         
-        # Make API request with authentication (token will be auto-refreshed if expired)
         response_data = await self._request("POST", ENDPOINT_SUBMIT_ORDER, data=request_data, include_auth=True)
         
-        # Handle different response formats from Pesapal API v3
-        # Pesapal might return different field names, so we need to map them
         mapped_response = {}
-        
-        # Map field names (Pesapal API 3.0 response uses snake_case)
-        # Response format: { "order_tracking_id": "...", "redirect_url": "...", "status": "200", "message": "..." }
         field_mapping = {
             "order_tracking_id": ["order_tracking_id", "orderTrackingId", "OrderTrackingId", "tracking_id"],
             "merchant_reference": ["merchant_reference", "merchantReference", "MerchantReference", "reference"],
@@ -347,13 +319,10 @@ class PesapalClient:
                     mapped_response[our_field] = response_data[field]
                     break
         
-        # If no mapping found, try direct assignment
         if not mapped_response:
             mapped_response = response_data
         
-        # Validate response has required fields
         if not mapped_response.get("order_tracking_id") and not mapped_response.get("redirect_url"):
-            # Check if it's an error response
             error_msg = mapped_response.get("message") or mapped_response.get("error") or mapped_response.get("errorMessage")
             if error_msg:
                 raise PesapalAPIError(
@@ -373,7 +342,6 @@ class PesapalClient:
                 response_data=response_data
             )
         
-        # Parse response (make fields optional to handle missing data)
         try:
             return PaymentResponse(**mapped_response)
         except Exception as e:
@@ -404,38 +372,32 @@ class PesapalClient:
         Raises:
             PesapalAPIError: If API returns an error
         """
-        # Get OAuth access token (will be auto-refreshed if expired)
         token = await self._get_access_token()
         
-        # Prepare query parameters (Pesapal API 3.0 uses query params for GET requests)
         params = {
-            "orderTrackingId": order_tracking_id  # Note: camelCase in query parameter
+            "orderTrackingId": order_tracking_id
         }
         
         if merchant_reference:
             params["merchantReference"] = merchant_reference
         
-        # Make API request with authentication
         response_data = await self._request("GET", ENDPOINT_GET_STATUS, params=params, include_auth=True)
         
-        # Log raw response for debugging
         logger.info(f"Raw Pesapal status response keys: {list(response_data.keys())}")
         logger.debug(f"Raw Pesapal status response: {response_data}")
         
-        # Map field names (Pesapal may return camelCase or snake_case)
-        # Handle all field variations according to Pesapal documentation
         field_mapping = {
             "payment_method": ["payment_method", "paymentMethod", "PaymentMethod"],
             "payment_status_description": ["payment_status_description", "paymentStatusDescription", "PaymentStatusDescription"],
             "confirmation_code": ["confirmation_code", "confirmationCode", "ConfirmationCode"],
-            "status_code": ["status_code", "statusCode", "StatusCode"],  # Integer: 0=INVALID, 1=COMPLETED, 2=FAILED, 3=REVERSED
+            "status_code": ["status_code", "statusCode", "StatusCode"],
             "order_tracking_id": ["order_tracking_id", "orderTrackingId", "OrderTrackingId"],
             "merchant_reference": ["merchant_reference", "merchantReference", "MerchantReference"],
             "payment_account": ["payment_account", "paymentAccount", "PaymentAccount"],
             "call_back_url": ["call_back_url", "callBackUrl", "CallBackUrl", "callback_url"],
             "created_date": ["created_date", "createdDate", "CreatedDate"],
-            "error": ["error", "Error"],  # Error object
-            "status": ["status", "Status"],  # HTTP status
+            "error": ["error", "Error"],
+            "status": ["status", "Status"],
         }
         
         mapped_response = {}
@@ -446,18 +408,15 @@ class PesapalClient:
                     logger.debug(f"Mapped {field} -> {our_field}: {response_data[field]}")
                     break
         
-        # Copy all other fields as-is
         for key, value in response_data.items():
             if key not in mapped_response:
                 mapped_response[key] = value
         
-        # Log payment_method extraction
         if "payment_method" in mapped_response:
             logger.info(f"Payment method extracted: {mapped_response['payment_method']}")
         else:
             logger.warning(f"Payment method not found in response. Available fields: {list(response_data.keys())}")
         
-        # Parse response
         return PaymentStatus(**mapped_response)
     
     async def initiate_payment(
@@ -514,10 +473,8 @@ class PesapalClient:
         Raises:
             PesapalAPIError: If registration fails
         """
-        # Get OAuth access token
         token = await self._get_access_token()
         
-        # Prepare request data
         request_data = {
             "url": ipn_url,
             "ipn_notification_type": ipn_notification_type.upper()
@@ -525,11 +482,8 @@ class PesapalClient:
         
         logger.info(f"Registering IPN URL: {ipn_url} (type: {ipn_notification_type})")
         
-        # Make API request with authentication
         response_data = await self._request("POST", ENDPOINT_IPN_REGISTER, data=request_data, include_auth=True)
         
-        # Parse response - Pesapal returns notification_id
-        # Response format may vary, handle different field names
         notification_id = (
             response_data.get("notification_id") or
             response_data.get("notificationId") or
@@ -565,14 +519,10 @@ class PesapalClient:
         Raises:
             PesapalAPIError: If request fails
         """
-        # Get OAuth access token
         token = await self._get_access_token()
         
         logger.info("Fetching registered IPN URLs...")
         
-        # Make API request with authentication
-        # Note: GET method is typically used for retrieving lists, but Pesapal may require POST
-        # Try GET first, fallback to POST if needed
         try:
             response_data = await self._request("GET", ENDPOINT_IPN_LIST, include_auth=True)
         except PesapalAPIError as e:
@@ -582,14 +532,11 @@ class PesapalClient:
             else:
                 raise
         
-        # Parse response - Pesapal may return array or object with array
         ipn_list = []
         
-        # Handle different response formats
         if isinstance(response_data, list):
             ipn_data_list = response_data
         elif isinstance(response_data, dict):
-            # Check for error in response (look for error object or error status)
             if "error" in response_data:
                 error_obj = response_data.get("error", {})
                 if isinstance(error_obj, dict):
@@ -601,7 +548,6 @@ class PesapalClient:
                     response_data=response_data
                 )
             
-            # Check for error status
             if response_data.get("status") and str(response_data.get("status")).startswith(("4", "5")):
                 error_msg = response_data.get("message", "An error has occurred")
                 raise PesapalAPIError(
@@ -609,14 +555,13 @@ class PesapalClient:
                     response_data=response_data
                 )
             
-            # Try common field names
             ipn_data_list = (
                 response_data.get("ipns") or
                 response_data.get("ipn_list") or
                 response_data.get("notifications") or
                 response_data.get("data") or
                 response_data.get("notification_urls") or
-                [response_data]  # Single IPN in object
+                [response_data]
             )
         else:
             raise PesapalAPIError(
@@ -624,7 +569,6 @@ class PesapalClient:
                 response_data=response_data
             )
         
-        # Parse each IPN registration
         for ipn_data in ipn_data_list:
             if isinstance(ipn_data, dict):
                 notification_id = (
@@ -646,10 +590,8 @@ class PesapalClient:
                     "GET"
                 )
                 
-                # Convert ipn_type to string and normalize (handle integers or other types)
                 if ipn_type:
                     ipn_type_str = str(ipn_type).upper()
-                    # Map common values
                     if ipn_type_str in ["0", "GET"]:
                         ipn_type_str = "GET"
                     elif ipn_type_str in ["1", "POST"]:
@@ -698,7 +640,6 @@ class PesapalClient:
             PesapalAPIError: If refund request fails
             PesapalValidationError: If required parameters are missing
         """
-        # Validate required parameters
         if not confirmation_code:
             raise PesapalValidationError("confirmation_code is required for refund")
         if not amount or amount <= 0:
@@ -708,27 +649,20 @@ class PesapalClient:
         if not remarks:
             raise PesapalValidationError("remarks is required for refund")
         
-        # Get OAuth access token
         token = await self._get_access_token()
         
-        # Prepare request data according to Pesapal API 3.0 spec
-        # CRITICAL: Pesapal requires amount as string with EXACTLY 2 decimal places (e.g., "100.00")
-        # The amount must match the original transaction amount exactly
-        # Format: Convert Decimal to string with exactly 2 decimal places
         amount_str = f"{float(amount):.2f}"
         
         request_data = {
             "confirmation_code": confirmation_code,
-            "amount": amount_str,  # String with exactly 2 decimal places (e.g., "2000.00")
+            "amount": amount_str,
             "username": username,
             "remarks": remarks
         }
         
         logger.info(f"Requesting refund: confirmation_code={confirmation_code}, amount={amount_str}, username={username}")
         logger.debug(f"Refund request payload: {request_data}")
-        logger.debug(f"Amount formatting: Decimal({amount}) -> '{amount_str}'")
         
-        # Make API request with authentication
         response_data = await self._request("POST", ENDPOINT_REFUND, data=request_data, include_auth=True)
         
         logger.info(f"Refund request submitted: {response_data}")
@@ -747,17 +681,14 @@ class PesapalClient:
         Raises:
             PesapalAPIError: If cancellation fails
         """
-        # Get OAuth access token
         token = await self._get_access_token()
         
-        # Prepare request data
         request_data = {
             "order_tracking_id": order_tracking_id
         }
         
         logger.info(f"Cancelling order: {order_tracking_id}")
         
-        # Make API request with authentication
         response_data = await self._request("POST", ENDPOINT_CANCEL_ORDER, data=request_data, include_auth=True)
         
         logger.info(f"Order cancellation submitted: {response_data}")
