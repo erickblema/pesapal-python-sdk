@@ -2164,3 +2164,21 @@ AttributeError: 'int' object has no attribute 'upper'
 2025-11-09 21:11:41 - main - INFO - Shutting down application...
 2025-11-09 21:11:41 - app.database.db - INFO - MongoDB disconnected
 2025-11-09 21:11:41 - main - INFO - Application shut down
+2025-11-09 21:26:30 - main - INFO - Starting application...
+2025-11-09 21:26:32 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 21:26:32 - main - INFO - Application started successfully
+2025-11-09 21:26:34 - main - INFO - Shutting down application...
+2025-11-09 21:26:34 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 21:26:34 - main - INFO - Application shut down
+2025-11-09 21:26:34 - main - INFO - Starting application...
+2025-11-09 21:26:36 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 21:26:36 - main - INFO - Application started successfully
+2025-11-09 21:26:40 - main - INFO - Shutting down application...
+2025-11-09 21:26:41 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 21:26:41 - main - INFO - Application shut down
+2025-11-09 21:26:41 - main - INFO - Starting application...
+2025-11-09 21:26:42 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 21:26:42 - main - INFO - Application started successfully
+2025-11-09 21:27:16 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
+2025-11-09 21:27:16 - pesapal.client - INFO - Submitting payment order: string1 - 100.0 TZS
+2025-11-09 21:27:17 - app.services.payment_service - INFO - Payment initiated successfully: order_id=string1, tracking_id=4c175c40-46bd-4317-8baf-db1c24d1687b

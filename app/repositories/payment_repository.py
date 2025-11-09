@@ -115,7 +115,7 @@ class PaymentRepository:
             if status_upper in ["PENDING", "PROCESSING", "COMPLETED", "FAILED", "CANCELLED"]:
                 query["payment_state"] = status_upper
             else:
-            query["status"] = status
+                query["status"] = status
         
         cursor = self.collection.find(query).skip(skip).limit(limit).sort("created_at", -1)
         docs = await cursor.to_list(length=limit)
