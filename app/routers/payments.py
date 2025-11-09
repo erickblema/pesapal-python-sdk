@@ -97,14 +97,26 @@ async def payment_callback(
     service: PaymentService = Depends(get_payment_service)
 ):
     """
-    Handle payment callback from Pesapal.
+    Payment callback endpoint - AUTOMATICALLY called by Pesapal.
     
-    Pesapal redirects customers to this URL after payment with query parameters:
+    ⚠️ IMPORTANT: This endpoint is automatically called by Pesapal when they redirect
+    users back to your site after payment. You do NOT need to call this manually.
+    
+    How it works:
+    1. User completes payment on Pesapal
+    2. Pesapal automatically redirects user to this callback URL
+    3. This endpoint automatically:
+       - Receives callback data from Pesapal
+       - Fetches fresh payment status from Pesapal API
+       - Updates database with latest status
+       - Shows success/failure page to user
+    
+    Query parameters (sent automatically by Pesapal):
     - **OrderTrackingId**: Pesapal order tracking ID
-    - **OrderNotificationType**: Always "CALLBACKURL" for callbacks
+    - **OrderNotificationType**: Notification type (usually "CALLBACKURL")
     - **OrderMerchantReference**: Your order ID
     
-    This endpoint automatically fetches the payment status from Pesapal.
+    This endpoint automatically fetches and updates payment status from Pesapal.
     """
     try:
         # Get query parameters (Pesapal sends them in camelCase)
@@ -165,66 +177,204 @@ async def payment_callback(
         
         # Automatically fetch fresh status from Pesapal (as per Pesapal docs)
         try:
+            logger.info(f"Fetching payment status from Pesapal for callback: order_id={payment.order_id}")
             updated_payment = await service.check_payment_status(payment.order_id)
             logger.info(f"Payment status updated via callback: order_id={payment.order_id}, status={updated_payment.status}")
+            
+            # Verify the status was actually updated
+            if updated_payment.status != payment.status:
+                logger.info(f"Status changed: {payment.status} -> {updated_payment.status}")
+            else:
+                logger.warning(f"Status check completed but status unchanged: {updated_payment.status}")
         except Exception as e:
-            logger.error(f"Error fetching payment status from Pesapal: {e}")
+            logger.error(f"Error fetching payment status from Pesapal: {e}", exc_info=True)
             # Continue with existing payment data if status check fails
+            updated_payment = payment
         
-        # Get updated payment with events and transactions
+        # Get fresh payment data from database
         updated_payment = await service.get_payment(payment.order_id)
-        transactions = await service.transaction_repository.get_by_payment_id(payment.order_id)
+        if not updated_payment:
+            updated_payment = payment
         
-        # Return comprehensive payment information
-        response_data = {
-            "message": "Payment callback received",
-            "payment": {
-                "order_id": updated_payment.order_id,
-                "order_tracking_id": updated_payment.order_tracking_id,
-                "status": updated_payment.status,
-                "amount": str(updated_payment.amount),
-                "currency": updated_payment.currency,
-                "payment_method": updated_payment.payment_method,
-                "confirmation_code": updated_payment.confirmation_code,
-                "callback_received": updated_payment.callback_received,
-                "callback_received_at": updated_payment.callback_received_at.isoformat() if updated_payment.callback_received_at else None,
-                "webhook_received": updated_payment.webhook_received,
-                "webhook_received_at": updated_payment.webhook_received_at.isoformat() if updated_payment.webhook_received_at else None,
-                "last_status_check": updated_payment.last_status_check.isoformat() if updated_payment.last_status_check else None,
-                "created_at": updated_payment.created_at.isoformat(),
-                "updated_at": updated_payment.updated_at.isoformat()
-            },
-            "status_history": updated_payment.status_history,
-            "transactions": [
-                {
-                    "transaction_id": str(t._id),
-                    "transaction_type": t.transaction_type,
-                    "amount": str(t.amount),
-                    "currency": t.currency,
-                    "status": t.status,
-                    "payment_method": t.payment_method,
-                    "confirmation_code": t.confirmation_code,
-                    "processed_at": t.processed_at.isoformat() if t.processed_at else None,
-                    "created_at": t.created_at.isoformat()
-                }
-                for t in transactions
-            ]
-        }
+        # Check if client wants JSON (API call) or HTML (browser redirect)
+        accept_header = request.headers.get("accept", "")
+        wants_json = "application/json" in accept_header or request.query_params.get("format") == "json"
         
-        # Include event history if available
-        if updated_payment.events:
-            response_data["events"] = [
-                {
-                    "event_type": event.event_type,
-                    "status": event.status,
-                    "source": event.source,
-                    "metadata": event.metadata,
-                    "timestamp": event.timestamp.isoformat()
-                }
-                for event in updated_payment.events
-            ]
-        
-        return response_data
+        if wants_json:
+            # Return JSON for API calls
+            response_data = {
+                "message": "Payment callback received",
+                "payment": {
+                    "order_id": updated_payment.order_id,
+                    "order_tracking_id": updated_payment.order_tracking_id,
+                    "status": updated_payment.status,
+                    "amount": str(updated_payment.amount),
+                    "currency": updated_payment.currency,
+                    "payment_method": updated_payment.payment_method,
+                    "confirmation_code": updated_payment.confirmation_code,
+                    "callback_received": updated_payment.callback_received,
+                    "callback_received_at": updated_payment.callback_received_at.isoformat() if updated_payment.callback_received_at else None,
+                    "webhook_received": updated_payment.webhook_received,
+                    "webhook_received_at": updated_payment.webhook_received_at.isoformat() if updated_payment.webhook_received_at else None,
+                    "last_status_check": updated_payment.last_status_check.isoformat() if updated_payment.last_status_check else None,
+                    "created_at": updated_payment.created_at.isoformat(),
+                    "updated_at": updated_payment.updated_at.isoformat()
+                },
+                "status_history": updated_payment.status_history
+            }
+            
+            # Include event history if available
+            if updated_payment.events:
+                response_data["events"] = [
+                    {
+                        "event_type": event.event_type,
+                        "status": event.status,
+                        "source": event.source,
+                        "metadata": event.metadata,
+                        "timestamp": event.timestamp.isoformat()
+                    }
+                    for event in updated_payment.events
+                ]
+            
+            return response_data
+        else:
+            # Return HTML page for browser redirects (default)
+            from fastapi.responses import HTMLResponse
+            
+            # Determine payment status message
+            if updated_payment.status == "200":
+                status_message = "Payment Successful!"
+                status_class = "success"
+                status_icon = "✓"
+            elif updated_payment.status in ["PENDING", "PROCESSING"]:
+                status_message = "Payment Processing..."
+                status_class = "pending"
+                status_icon = "⏳"
+            else:
+                status_message = "Payment Failed"
+                status_class = "failed"
+                status_icon = "✗"
+            
+            html_content = f"""
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Payment Status - {status_message}</title>
+                <style>
+                    * {{
+                        margin: 0;
+                        padding: 0;
+                        box-sizing: border-box;
+                    }}
+                    body {{
+                        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        min-height: 100vh;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        padding: 20px;
+                    }}
+                    .container {{
+                        background: white;
+                        border-radius: 20px;
+                        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+                        max-width: 500px;
+                        width: 100%;
+                        padding: 40px;
+                        text-align: center;
+                    }}
+                    .status-icon {{
+                        font-size: 80px;
+                        margin-bottom: 20px;
+                    }}
+                    .status-{status_class} {{
+                        color: {'#10b981' if status_class == 'success' else '#f59e0b' if status_class == 'pending' else '#ef4444'};
+                    }}
+                    h1 {{
+                        color: #1f2937;
+                        margin-bottom: 10px;
+                        font-size: 28px;
+                    }}
+                    .status-message {{
+                        color: #6b7280;
+                        margin-bottom: 30px;
+                        font-size: 16px;
+                    }}
+                    .details {{
+                        background: #f9fafb;
+                        border-radius: 10px;
+                        padding: 20px;
+                        margin-top: 20px;
+                        text-align: left;
+                    }}
+                    .detail-row {{
+                        display: flex;
+                        justify-content: space-between;
+                        padding: 10px 0;
+                        border-bottom: 1px solid #e5e7eb;
+                    }}
+                    .detail-row:last-child {{
+                        border-bottom: none;
+                    }}
+                    .detail-label {{
+                        color: #6b7280;
+                        font-weight: 500;
+                    }}
+                    .detail-value {{
+                        color: #1f2937;
+                        font-weight: 600;
+                    }}
+                    .button {{
+                        margin-top: 30px;
+                        padding: 12px 30px;
+                        background: #667eea;
+                        color: white;
+                        border: none;
+                        border-radius: 8px;
+                        font-size: 16px;
+                        cursor: pointer;
+                        text-decoration: none;
+                        display: inline-block;
+                        transition: background 0.3s;
+                    }}
+                    .button:hover {{
+                        background: #5568d3;
+                    }}
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="status-icon status-{status_class}">{status_icon}</div>
+                    <h1>{status_message}</h1>
+                    <p class="status-message">Your payment has been processed</p>
+                    
+                    <div class="details">
+                        <div class="detail-row">
+                            <span class="detail-label">Order ID:</span>
+                            <span class="detail-value">{updated_payment.order_id}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Amount:</span>
+                            <span class="detail-value">{updated_payment.amount} {updated_payment.currency}</span>
+                        </div>
+                        {f'<div class="detail-row"><span class="detail-label">Payment Method:</span><span class="detail-value">{updated_payment.payment_method or "N/A"}</span></div>' if updated_payment.payment_method else ''}
+                        {f'<div class="detail-row"><span class="detail-label">Confirmation Code:</span><span class="detail-value">{updated_payment.confirmation_code}</span></div>' if updated_payment.confirmation_code else ''}
+                        <div class="detail-row">
+                            <span class="detail-label">Status:</span>
+                            <span class="detail-value">{updated_payment.status}</span>
+                        </div>
+                    </div>
+                    
+                    <a href="/" class="button">Return to Home</a>
+                </div>
+            </body>
+            </html>
+            """
+            
+            return HTMLResponse(content=html_content)
         
     except HTTPException:
         raise
@@ -239,7 +389,6 @@ async def payment_callback(
 @router.get("/{order_id}")
 async def get_payment(
     order_id: str,
-    include_transactions: bool = False,
     service: PaymentService = Depends(get_payment_service)
 ):
     """
@@ -249,10 +398,8 @@ async def get_payment(
     - Payment details
     - Status history
     - Event history
-    - Transaction history (if include_transactions=true)
     
     - **order_id**: Order identifier
-    - **include_transactions**: Include transaction history (default: false)
     """
     payment = await service.get_payment(order_id)
     
@@ -300,28 +447,6 @@ async def get_payment(
             for event in payment.events
         ]
     }
-    
-    # Include transactions if requested
-    if include_transactions:
-        transactions = await service.transaction_repository.get_by_payment_id(order_id)
-        response_data["transactions"] = [
-            {
-                "transaction_id": str(t._id),
-                "transaction_type": t.transaction_type,
-                "amount": str(t.amount),
-                "currency": t.currency,
-                "status": t.status,
-                "transaction_reference": t.transaction_reference,
-                "payment_method": t.payment_method,
-                "confirmation_code": t.confirmation_code,
-                "fees": str(t.fees) if t.fees else None,
-                "net_amount": str(t.net_amount),
-                "processed_at": t.processed_at.isoformat() if t.processed_at else None,
-                "settled_at": t.settled_at.isoformat() if t.settled_at else None,
-                "created_at": t.created_at.isoformat()
-            }
-            for t in transactions
-        ]
     
     return response_data
 
@@ -439,57 +564,6 @@ async def get_transaction_status(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get transaction status: {str(e)}"
         )
-
-
-@router.get("/{order_id}/transactions")
-async def get_payment_transactions(
-    order_id: str,
-    service: PaymentService = Depends(get_payment_service)
-):
-    """
-    Get all transactions for a payment.
-    
-    Returns comprehensive transaction history including:
-    - Payment transactions
-    - Refunds
-    - Fees
-    - Status changes
-    
-    - **order_id**: Order identifier
-    """
-    payment = await service.get_payment(order_id)
-    if not payment:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Payment not found: {order_id}"
-        )
-    
-    transactions = await service.transaction_repository.get_by_payment_id(order_id)
-    
-    return {
-        "payment_id": order_id,
-        "order_tracking_id": payment.order_tracking_id,
-        "total_transactions": len(transactions),
-        "transactions": [
-            {
-                "transaction_id": str(t._id),
-                "transaction_type": t.transaction_type,
-                "amount": str(t.amount),
-                "currency": t.currency,
-                "status": t.status,
-                "transaction_reference": t.transaction_reference,
-                "payment_method": t.payment_method,
-                "confirmation_code": t.confirmation_code,
-                "fees": str(t.fees) if t.fees else None,
-                "net_amount": str(t.net_amount),
-                "processed_at": t.processed_at.isoformat() if t.processed_at else None,
-                "settled_at": t.settled_at.isoformat() if t.settled_at else None,
-                "created_at": t.created_at.isoformat(),
-                "metadata": t.metadata
-            }
-            for t in transactions
-        ]
-    }
 
 
 @router.get("/", response_model=List[PaymentResponse])

@@ -10,9 +10,7 @@ from pesapal.models import PaymentRequest, PaymentResponse, PaymentStatus
 from pesapal.exceptions import PesapalError
 
 from app.repositories.payment_repository import PaymentRepository
-from app.repositories.transaction_repository import TransactionRepository
 from app.models.payment import Payment
-from app.models.transaction import Transaction, TransactionType, TransactionStatus
 from app.config.settings import settings
 
 logger = logging.getLogger(__name__)
@@ -23,7 +21,6 @@ class PaymentService:
     
     def __init__(self):
         self.repository = PaymentRepository()
-        self.transaction_repository = TransactionRepository()
         self._client: Optional[PesapalClient] = None
     
     def _get_client(self) -> PesapalClient:
@@ -171,24 +168,6 @@ class PaymentService:
                 }
             )
             
-            # Create transaction record
-            transaction = Transaction(
-                payment_id=order_id,
-                transaction_type=TransactionType.PAYMENT.value,
-                amount=amount,
-                currency=currency,
-                status=TransactionStatus.PENDING.value,
-                transaction_reference=payment.order_tracking_id,
-                payment_provider="PESAPAL",
-                description=description,
-                metadata={
-                    "redirect_url": payment.redirect_url,
-                    "pesapal_response": response.model_dump()
-                },
-                initiated_by="SYSTEM"
-            )
-            await self.transaction_repository.create(transaction)
-            
             logger.info(f"Payment initiated successfully: order_id={order_id}, tracking_id={payment.order_tracking_id}")
             
             # Update in database with events and status history
@@ -296,19 +275,6 @@ class PaymentService:
                 "timestamp": datetime.utcnow()
             }
             
-            # Update transaction if exists
-            transactions = await self.transaction_repository.get_by_payment_id(order_id)
-            if transactions:
-                main_transaction = transactions[0]  # Get the main payment transaction
-                transaction_status = TransactionStatus.COMPLETED.value if new_status == "200" else TransactionStatus.PROCESSING.value
-                await self.transaction_repository.update_status(
-                    main_transaction._id,
-                    transaction_status,
-                    confirmation_code=status.confirmation_code,
-                    payment_method=status.payment_method,  # Update payment_method on transaction
-                    processed_at=datetime.utcnow() if new_status == "200" else None
-                )
-            
             # Always update payment_method if provided (even if None, to ensure it's saved)
             updated = await self.repository.update_status(
                 order_id,
@@ -319,29 +285,44 @@ class PaymentService:
             )
             
             # Update status history and other fields (including payment_method even if None)
-            if updated:
-                update_fields = {
-                    "last_status_check": payment.last_status_check,
-                    "provider_response": payment.provider_response,
-                    "status_history": payment.status_history
-                }
-                
-                # Always update payment_method (even if None, to clear old values)
-                if status.payment_method is not None:
-                    update_fields["payment_method"] = status.payment_method
-                if status.confirmation_code is not None:
-                    update_fields["confirmation_code"] = status.confirmation_code
-                
-                await self.repository.collection.update_one(
-                    {"order_id": order_id},
-                    {"$set": update_fields}
-                )
+            # Always update these fields even if update_status returned None
+            update_fields = {
+                "last_status_check": payment.last_status_check,
+                "provider_response": payment.provider_response,
+                "status_history": payment.status_history,
+                "status": new_status  # Ensure status is updated
+            }
+            
+            # Always update payment_method (even if None, to clear old values)
+            if status.payment_method is not None:
+                update_fields["payment_method"] = status.payment_method
+            if status.confirmation_code is not None:
+                update_fields["confirmation_code"] = status.confirmation_code
+            
+            # Update directly in database to ensure it's saved
+            result = await self.repository.collection.update_one(
+                {"order_id": order_id},
+                {"$set": update_fields}
+            )
+            
+            logger.info(f"Database update result: modified={result.modified_count}, matched={result.matched_count}")
+            
+            if result.modified_count == 0:
+                logger.warning(f"No documents were updated for order_id={order_id}. Payment may not exist in database.")
             
             logger.info(f"Payment status checked: order_id={order_id}, status={old_status} -> {new_status}")
+            
+            # Return the updated payment from database
+            final_payment = await self.repository.get_by_order_id(order_id)
+            if final_payment:
+                return final_payment
             return updated or payment
             
         except PesapalError as e:
-            logger.warning(f"Failed to check payment status for order {order_id}: {str(e)}")
+            logger.error(f"Failed to check payment status for order {order_id}: {str(e)}", exc_info=True)
+            return payment
+        except Exception as e:
+            logger.error(f"Unexpected error checking payment status for order {order_id}: {str(e)}", exc_info=True)
             return payment
     
     async def get_payment(self, order_id: str) -> Optional[Payment]:

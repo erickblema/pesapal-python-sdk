@@ -79,20 +79,20 @@ Access Swagger UI at: `http://localhost:8000/docs`
   }
   ```
 
-- **GET `/payments/callback`** - Payment callback handler (called by Pesapal after payment)
-  - Automatically fetches payment status
-  - Returns complete payment data with transaction history
+- **GET `/payments/callback`** - Payment callback handler
+  - ⚠️ **AUTOMATIC**: Called automatically by Pesapal when redirecting users after payment
+  - You do NOT need to call this endpoint manually
+  - Automatically fetches payment status from Pesapal
+  - Updates database with latest status
+  - Shows HTML success/failure page to user (or JSON if requested)
 
 - **GET `/payments/{order_id}`** - Get payment details
   - Returns payment info, status history, event history
-  - Add `?include_transactions=true` to include transaction history
 
 - **GET `/payments/{order_id}/status`** - Check payment status
   - Fetches latest status from Pesapal
-  - Updates transaction records
+  - Updates payment record
 
-- **GET `/payments/{order_id}/transactions`** - Get transaction history
-  - Returns all transactions for a payment
 
 - **GET `/payments/status/transaction?orderTrackingId={id}`** - Get status by tracking ID
 
@@ -117,14 +117,6 @@ Stores main payment records with:
 - Callback/webhook tracking (flags and timestamps)
 - Provider responses (full Pesapal API responses)
 
-### Transactions Collection
-
-Stores individual transaction records:
-- Transaction type (PAYMENT, REFUND, CHARGEBACK, etc.)
-- Amount, fees, net amount
-- Status (PENDING, PROCESSING, COMPLETED, etc.)
-- Processing timestamps
-- Links to payment via `payment_id`
 
 ### Status History
 
@@ -161,26 +153,26 @@ All events are tracked:
 
 2. **Customer Completes Payment:**
    - Customer redirected to Pesapal
-   - Completes payment
-   - Pesapal redirects to callback URL
+   - Completes payment on Pesapal
+   - Pesapal automatically redirects user back to your callback URL
 
-3. **Callback Received:**
-   ```bash
-   GET /payments/callback?OrderTrackingId=xxx&OrderMerchantReference=ORDER-123
-   ```
-   - Updates callback flags
-   - Fetches fresh status from Pesapal
-   - Updates transaction status
-   - Returns complete payment data
+3. **Callback Automatically Triggered:**
+   - ⚠️ **AUTOMATIC**: Pesapal automatically calls `/payments/callback` with query parameters
+   - You do NOT need to call this manually
+   - Endpoint automatically:
+     - Receives callback data from Pesapal
+     - Fetches fresh status from Pesapal API
+     - Updates database with latest status
+     - Shows success/failure HTML page to user
 
-4. **Webhook Received:**
-   ```bash
-   POST /webhooks/pesapal
-   ```
-   - Receives IPN notification
-   - Fetches payment status
-   - Updates payment and transaction records
-   - Returns IPN response
+4. **Webhook Automatically Triggered:**
+   - ⚠️ **AUTOMATIC**: Pesapal automatically sends IPN webhook to `/webhooks/pesapal`
+   - You do NOT need to call this manually
+   - Endpoint automatically:
+     - Receives IPN notification
+     - Fetches payment status
+     - Updates payment and transaction records
+     - Returns IPN response to Pesapal
 
 ## Response Format
 
