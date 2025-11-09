@@ -671,18 +671,21 @@ class PesapalClient:
         token = await self._get_access_token()
         
         # Prepare request data according to Pesapal API 3.0 spec
-        # Note: Refund endpoint expects amount as string with 2 decimal places (e.g., "100.00")
-        # Convert Decimal to float first, then format as string with 2 decimal places
+        # CRITICAL: Pesapal requires amount as string with EXACTLY 2 decimal places (e.g., "100.00")
+        # The amount must match the original transaction amount exactly
+        # Format: Convert Decimal to string with exactly 2 decimal places
         amount_str = f"{float(amount):.2f}"
+        
         request_data = {
             "confirmation_code": confirmation_code,
-            "amount": amount_str,  # Format as string with 2 decimal places
+            "amount": amount_str,  # String with exactly 2 decimal places (e.g., "2000.00")
             "username": username,
             "remarks": remarks
         }
         
         logger.info(f"Requesting refund: confirmation_code={confirmation_code}, amount={amount_str}, username={username}")
         logger.debug(f"Refund request payload: {request_data}")
+        logger.debug(f"Amount formatting: Decimal({amount}) -> '{amount_str}'")
         
         # Make API request with authentication
         response_data = await self._request("POST", ENDPOINT_REFUND, data=request_data, include_auth=True)

@@ -679,18 +679,42 @@ async def refund_payment(
                 detail="Payment does not have a confirmation_code. Only completed payments can be refunded."
             )
         
+        # Get the actual paid amount from provider_response if available
+        # Pesapal may have different amount due to fees or adjustments
+        actual_paid_amount = payment.amount
+        if payment.provider_response and "amount" in payment.provider_response:
+            try:
+                # Use amount from provider response if available (this is what Pesapal actually processed)
+                provider_amount = payment.provider_response.get("amount")
+                if isinstance(provider_amount, (int, float)):
+                    actual_paid_amount = Decimal(str(provider_amount))
+                elif isinstance(provider_amount, str):
+                    actual_paid_amount = Decimal(provider_amount)
+                elif isinstance(provider_amount, Decimal):
+                    actual_paid_amount = provider_amount
+            except (ValueError, TypeError):
+                # Fallback to payment.amount if provider amount is invalid
+                pass
+        
         # Validate amount doesn't exceed payment amount
-        if refund_amount > payment.amount:
+        if refund_amount > actual_paid_amount:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Refund amount ({refund_amount}) cannot exceed payment amount ({payment.amount})"
+                detail=f"Refund amount ({refund_amount}) cannot exceed payment amount ({actual_paid_amount})"
             )
+        
+        # Ensure amount is formatted with exactly 2 decimal places for Pesapal
+        # Pesapal is very strict about amount format matching the original transaction
+        refund_amount_str = f"{refund_amount:.2f}"
+        actual_paid_amount_str = f"{actual_paid_amount:.2f}"
         
         # Log payment details for debugging
         logger.info(
             f"Refund request: order_tracking_id={order_tracking_id}, "
-            f"payment_amount={payment.amount}, refund_amount={refund_amount}, "
-            f"currency={payment.currency}, confirmation_code={payment.confirmation_code}"
+            f"payment_amount={actual_paid_amount} ({actual_paid_amount_str}), "
+            f"refund_amount={refund_amount} ({refund_amount_str}), "
+            f"currency={payment.currency}, confirmation_code={payment.confirmation_code}, "
+            f"payment_method={payment.payment_method}"
         )
         
         client = service._get_client()
