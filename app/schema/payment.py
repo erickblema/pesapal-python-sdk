@@ -23,7 +23,8 @@ class PaymentResponse(BaseModel):
     amount: Decimal = Field(..., description="Payment amount")  # Keep as Decimal internally
     currency: str = Field(..., description="Currency code")
     description: str = Field(..., description="Payment description")
-    status: str = Field(..., description="Payment status")
+    status: str = Field(..., description="Payment status code from Pesapal (e.g., '200', 'PENDING')")
+    payment_state: str = Field(..., description="Clear payment state: PENDING, PROCESSING, COMPLETED, FAILED, CANCELLED")
     order_tracking_id: Optional[str] = Field(None, description="Pesapal tracking ID")
     redirect_url: Optional[str] = Field(None, description="Payment redirect URL")
     payment_method: Optional[str] = Field(None, description="Payment method used")
@@ -34,6 +35,19 @@ class PaymentResponse(BaseModel):
     @model_serializer
     def serialize_model(self) -> dict:
         """Serialize model with OrderTrackingId in camelCase and amount as string."""
+        # Determine payment state from status
+        status_code = str(self.status).upper()
+        if status_code == "200":
+            payment_state = "COMPLETED"
+        elif status_code in ["PENDING", "PROCESSING"]:
+            payment_state = "PROCESSING"
+        elif status_code in ["FAILED", "ERROR", "0"]:
+            payment_state = "FAILED"
+        elif status_code == "CANCELLED":
+            payment_state = "CANCELLED"
+        else:
+            payment_state = "PENDING"
+        
         data = {
             "_id": self.id,  # Use self.id (which is aliased from _id)
             "order_id": self.order_id,
@@ -41,6 +55,7 @@ class PaymentResponse(BaseModel):
             "currency": self.currency,
             "description": self.description,
             "status": self.status,
+            "payment_state": payment_state,  # Clear state indicator
             "OrderTrackingId": self.order_tracking_id,  # Use camelCase for Pesapal v3
             "redirect_url": self.redirect_url,
             "payment_method": self.payment_method,

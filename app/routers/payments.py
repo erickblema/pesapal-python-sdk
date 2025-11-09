@@ -60,6 +60,9 @@ async def create_payment(
                 detail="Payment initiation failed: No tracking ID or redirect URL received. Check Pesapal credentials and API status."
             )
         
+        # Get clear payment state
+        payment_state = payment.get_payment_state()
+        
         return PaymentResponse(
             _id=str(payment._id),
             order_id=payment.order_id,
@@ -67,6 +70,7 @@ async def create_payment(
             currency=payment.currency,
             description=payment.description,
             status=payment.status,
+            payment_state=payment_state,
             order_tracking_id=payment.order_tracking_id,
             redirect_url=payment.redirect_url,
             payment_method=payment.payment_method,
@@ -201,24 +205,33 @@ async def payment_callback(
         wants_json = "application/json" in accept_header or request.query_params.get("format") == "json"
         
         if wants_json:
+            # Get clear payment state
+            payment_state = updated_payment.get_payment_state()
+            
             # Return JSON for API calls
             response_data = {
                 "message": "Payment callback received",
                 "payment": {
                     "order_id": updated_payment.order_id,
                     "order_tracking_id": updated_payment.order_tracking_id,
-                    "status": updated_payment.status,
+                    "status": updated_payment.status,  # Raw status code
+                    "payment_state": payment_state,  # Clear state: PENDING, PROCESSING, COMPLETED, FAILED, CANCELLED
                     "amount": str(updated_payment.amount),
                     "currency": updated_payment.currency,
                     "payment_method": updated_payment.payment_method,
                     "confirmation_code": updated_payment.confirmation_code,
+                    "is_completed": updated_payment.is_completed(),
+                    "is_failed": updated_payment.is_failed(),
+                    "is_pending": updated_payment.is_pending(),
+                    "created_at": updated_payment.created_at.isoformat(),
+                    "updated_at": updated_payment.updated_at.isoformat()
+                },
+                "timeline": {
                     "callback_received": updated_payment.callback_received,
                     "callback_received_at": updated_payment.callback_received_at.isoformat() if updated_payment.callback_received_at else None,
                     "webhook_received": updated_payment.webhook_received,
                     "webhook_received_at": updated_payment.webhook_received_at.isoformat() if updated_payment.webhook_received_at else None,
-                    "last_status_check": updated_payment.last_status_check.isoformat() if updated_payment.last_status_check else None,
-                    "created_at": updated_payment.created_at.isoformat(),
-                    "updated_at": updated_payment.updated_at.isoformat()
+                    "last_status_check": updated_payment.last_status_check.isoformat() if updated_payment.last_status_check else None
                 },
                 "status_history": updated_payment.status_history
             }
@@ -241,19 +254,28 @@ async def payment_callback(
             # Return HTML page for browser redirects (default)
             from fastapi.responses import HTMLResponse
             
-            # Determine payment status message
-            if updated_payment.status == "200":
+            # Determine payment status message from payment state
+            payment_state = updated_payment.get_payment_state()
+            if payment_state == "COMPLETED":
                 status_message = "Payment Successful!"
                 status_class = "success"
                 status_icon = "✓"
-            elif updated_payment.status in ["PENDING", "PROCESSING"]:
+            elif payment_state == "PROCESSING":
                 status_message = "Payment Processing..."
                 status_class = "pending"
                 status_icon = "⏳"
-            else:
+            elif payment_state == "FAILED":
                 status_message = "Payment Failed"
                 status_class = "failed"
                 status_icon = "✗"
+            elif payment_state == "CANCELLED":
+                status_message = "Payment Cancelled"
+                status_class = "failed"
+                status_icon = "✗"
+            else:
+                status_message = "Payment Pending"
+                status_class = "pending"
+                status_icon = "⏳"
             
             html_content = f"""
             <!DOCTYPE html>
@@ -409,6 +431,9 @@ async def get_payment(
             detail=f"Payment not found: {order_id}"
         )
     
+    # Get clear payment state
+    payment_state = payment.get_payment_state()
+    
     response_data = {
         "payment": {
             "_id": str(payment._id),
@@ -416,24 +441,24 @@ async def get_payment(
             "amount": str(payment.amount),
             "currency": payment.currency,
             "description": payment.description,
-            "status": payment.status,
+            "status": payment.status,  # Raw status code from Pesapal
+            "payment_state": payment_state,  # Clear state: PENDING, PROCESSING, COMPLETED, FAILED, CANCELLED
             "order_tracking_id": payment.order_tracking_id,
             "redirect_url": payment.redirect_url,
             "payment_method": payment.payment_method,
             "confirmation_code": payment.confirmation_code,
-            "merchant_id": payment.merchant_id,
-            "branch": payment.branch,
-            "fees": str(payment.fees) if payment.fees else None,
-            "net_amount": str(payment.net_amount),
-            "total_amount": str(payment.total_amount),
-            "payment_provider": payment.payment_provider,
+            "is_completed": payment.is_completed(),
+            "is_failed": payment.is_failed(),
+            "is_pending": payment.is_pending(),
+            "created_at": payment.created_at.isoformat(),
+            "updated_at": payment.updated_at.isoformat()
+        },
+        "timeline": {
             "callback_received": payment.callback_received,
             "callback_received_at": payment.callback_received_at.isoformat() if payment.callback_received_at else None,
             "webhook_received": payment.webhook_received,
             "webhook_received_at": payment.webhook_received_at.isoformat() if payment.webhook_received_at else None,
-            "last_status_check": payment.last_status_check.isoformat() if payment.last_status_check else None,
-            "created_at": payment.created_at.isoformat(),
-            "updated_at": payment.updated_at.isoformat()
+            "last_status_check": payment.last_status_check.isoformat() if payment.last_status_check else None
         },
         "status_history": payment.status_history,
         "events": [

@@ -4,6 +4,16 @@ from datetime import datetime
 from typing import Optional, List, Dict, Any
 from decimal import Decimal
 from bson import ObjectId
+from enum import Enum
+
+
+class PaymentState(str, Enum):
+    """Clear payment states."""
+    PENDING = "PENDING"
+    PROCESSING = "PROCESSING"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+    CANCELLED = "CANCELLED"
 
 
 class PaymentEvent:
@@ -144,6 +154,40 @@ class Payment:
         self.status = new_status
         self.updated_at = datetime.utcnow()
         return status_entry
+    
+    def get_payment_state(self) -> str:
+        """
+        Get clear payment state based on status code.
+        
+        Returns:
+            PaymentState enum value (PENDING, PROCESSING, COMPLETED, FAILED, CANCELLED)
+        """
+        status_code = str(self.status).upper()
+        
+        # Pesapal status codes
+        if status_code == "200":
+            return PaymentState.COMPLETED.value
+        elif status_code in ["PENDING", "PROCESSING"]:
+            return PaymentState.PROCESSING.value
+        elif status_code in ["FAILED", "ERROR", "0"]:
+            return PaymentState.FAILED.value
+        elif status_code == "CANCELLED":
+            return PaymentState.CANCELLED.value
+        else:
+            # Default to pending if status is unclear
+            return PaymentState.PENDING.value
+    
+    def is_completed(self) -> bool:
+        """Check if payment is completed."""
+        return self.get_payment_state() == PaymentState.COMPLETED.value
+    
+    def is_failed(self) -> bool:
+        """Check if payment failed."""
+        return self.get_payment_state() == PaymentState.FAILED.value
+    
+    def is_pending(self) -> bool:
+        """Check if payment is pending."""
+        return self.get_payment_state() == PaymentState.PENDING.value
     
     def to_dict(self) -> dict:
         """Convert to dictionary for MongoDB."""
