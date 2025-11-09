@@ -44,26 +44,22 @@ class PaymentRepository:
         event: Optional[dict] = None
     ) -> Optional[Payment]:
         """Update payment status with event tracking."""
-        # Get current payment to check if status changed
         current_payment = await self.get_by_order_id(order_id)
         if not current_payment:
             return None
         
-        # Update payment object fields to calculate payment_state correctly
         current_payment.status = status
         if payment_method is not None:
             current_payment.payment_method = payment_method
         if confirmation_code is not None:
             current_payment.confirmation_code = confirmation_code
         
-        # Calculate payment_state based on updated fields
         current_payment.payment_state = current_payment.get_payment_state()
         
-        # Build update operation
         update_operation = {
             "$set": {
                 "status": status,
-                "payment_state": current_payment.payment_state,  # Save payment_state
+                "payment_state": current_payment.payment_state,
                 "updated_at": datetime.utcnow()
             }
         }
@@ -73,7 +69,6 @@ class PaymentRepository:
         if confirmation_code is not None:
             update_operation["$set"]["confirmation_code"] = confirmation_code
         
-        # Add event to events array if provided
         if event:
             update_operation["$push"] = {"events": event}
         
@@ -113,16 +108,13 @@ class PaymentRepository:
     ) -> List[Payment]:
         """List payments with optional filtering."""
         query = {}
-        # Support filtering by payment_state (preferred) or status (backward compatibility)
         if payment_state:
             query["payment_state"] = payment_state.upper()
         elif status:
-            # If status is a payment_state value, filter by payment_state
             status_upper = status.upper()
             if status_upper in ["PENDING", "PROCESSING", "COMPLETED", "FAILED", "CANCELLED"]:
                 query["payment_state"] = status_upper
             else:
-                # Otherwise, filter by status field (for backward compatibility)
                 query["status"] = status
         
         cursor = self.collection.find(query).skip(skip).limit(limit).sort("created_at", -1)

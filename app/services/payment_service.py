@@ -62,14 +62,12 @@ class PaymentService:
         Returns:
             Payment object with redirect URL
         """
-        # Check if payment already exists
         existing = await self.repository.get_by_order_id(order_id)
         if existing:
             if existing.status == "COMPLETED":
                 raise ValueError("Payment already completed")
             return existing
         
-        # Create payment record
         payment = Payment(
             order_id=order_id,
             amount=amount,
@@ -79,7 +77,6 @@ class PaymentService:
             billing_address=billing_address
         )
         
-        # Add creation event
         payment.add_event(
             event_type="CREATED",
             status="PENDING",
@@ -92,19 +89,14 @@ class PaymentService:
             }
         )
         
-        # Save to database
         payment = await self.repository.create(payment)
         
-        # Initiate payment with Pesapal
         try:
             client = self._get_client()
-            # Use configured callback URL or default
             callback_url = settings.pesapal_callback_url
             if not callback_url:
-                # Default callback URL (should be set in production)
                 callback_url = "https://payment-helper.onrender.com/payments/callback"
             
-            # Get IPN notification ID from settings
             notification_id = settings.pesapal_ipn_id
             if not notification_id:
                 raise ValueError(
@@ -120,33 +112,27 @@ class PaymentService:
                 description=description,
                 callback_url=callback_url,
                 notification_id=notification_id,
-                redirect_mode=None,  # Will default to TOP_WINDOW in client
-                cancellation_url=None,  # Optional - can be added later if needed
-                branch=None,  # Optional - can be added later if needed
+                redirect_mode=None,
+                cancellation_url=None,
+                branch=None,
                 customer=customer,
                 billing_address=billing_address
             )
             
             response: PaymentResponse = await client.submit_order(payment_request)
             
-            # Validate response has required data
             if not response.order_tracking_id and not response.redirect_url:
                 raise PesapalError(
                     f"Pesapal API returned invalid response: {response.model_dump()}. "
                     f"Missing order_tracking_id and redirect_url."
                 )
             
-            # Update payment with tracking ID and redirect URL
             old_status = payment.status
             payment.order_tracking_id = response.order_tracking_id
             payment.redirect_url = response.redirect_url
-            # IMPORTANT: Pesapal returns "200" when payment is submitted, NOT when completed
-            # Payment is still PENDING until customer completes it
-            # We keep the status as "200" (Pesapal's response) but payment_state will be PENDING
-            payment.status = response.status or "200"  # Pesapal returns "200" for successful submission
+            payment.status = response.status or "200"
             payment.provider_response = response.model_dump()
             
-            # Add status change
             payment.add_status_change(
                 old_status=old_status,
                 new_status=payment.status,
@@ -159,7 +145,6 @@ class PaymentService:
                 }
             )
             
-            # Add event for Pesapal submission
             payment.add_event(
                 event_type="SUBMITTED_TO_PESAPAL",
                 status=payment.status,
@@ -173,10 +158,8 @@ class PaymentService:
             
             logger.info(f"Payment initiated successfully: order_id={order_id}, tracking_id={payment.order_tracking_id}")
             
-            # Update payment_state before saving
             payment.payment_state = payment.get_payment_state()
             
-            # Update in database with events and status history
             await self.repository.collection.update_one(
                 {"_id": payment._id},
                 {
@@ -184,7 +167,7 @@ class PaymentService:
                         "order_tracking_id": payment.order_tracking_id,
                         "redirect_url": payment.redirect_url,
                         "status": payment.status,
-                        "payment_state": payment.payment_state,  # Save payment_state
+                        "payment_state": payment.payment_state,
                         "provider_response": payment.provider_response,
                         "status_history": payment.status_history,
                         "updated_at": datetime.utcnow()
@@ -234,22 +217,17 @@ class PaymentService:
                 order_id
             )
             
-            # Update payment status
-            # Map Pesapal status_code (0=INVALID, 1=COMPLETED, 2=FAILED, 3=REVERSED) to our status
             old_status = payment.status
             
-            # Convert status_code to string status
             if status.status_code is not None:
-                # Map Pesapal status_code to string status
                 status_code_map = {
                     0: "INVALID",
-                    1: "200",  # COMPLETED
+                    1: "200",
                     2: "FAILED",
                     3: "REVERSED"
                 }
                 new_status = status_code_map.get(status.status_code, payment.status)
             elif status.payment_status_description:
-                # Fallback to payment_status_description if status_code not available
                 desc = status.payment_status_description.upper()
                 if desc == "COMPLETED":
                     new_status = "200"
@@ -264,8 +242,6 @@ class PaymentService:
             else:
                 new_status = payment.status
             
-            # Update payment fields
-            # Always update payment_method if provided (even if it was None before)
             if status.payment_method:
                 payment.payment_method = status.payment_method
             if status.confirmation_code:
@@ -275,14 +251,13 @@ class PaymentService:
             
             logger.info(
                 f"Payment status from Pesapal: "
-                f"status_code={status.status_code} (0=INVALID, 1=COMPLETED, 2=FAILED, 3=REVERSED), "
+                f"status_code={status.status_code}, "
                 f"payment_status_description={status.payment_status_description}, "
                 f"payment_method={status.payment_method}, "
                 f"confirmation_code={status.confirmation_code}, "
                 f"mapped_status={new_status}"
             )
             
-            # Add status change if status changed
             if old_status != new_status:
                 payment.add_status_change(
                     old_status=old_status,
@@ -297,7 +272,6 @@ class PaymentService:
                     }
                 )
             
-            # Add event for status check
             event_metadata = {
                 "old_status": old_status,
                 "new_status": new_status,
@@ -315,35 +289,29 @@ class PaymentService:
                 "timestamp": datetime.utcnow()
             }
             
-            # Always update payment_method if provided (even if None, to ensure it's saved)
             updated = await self.repository.update_status(
                 order_id,
                 new_status,
-                status.payment_method,  # This will be None if not provided, but that's okay
+                status.payment_method,
                 status.confirmation_code,
                 event=event
             )
             
-            # Update payment_state when status or payment_method/confirmation_code changes
             payment.payment_state = payment.get_payment_state()
             
-            # Update status history and other fields (including payment_method even if None)
-            # Always update these fields even if update_status returned None
             update_fields = {
                 "last_status_check": payment.last_status_check,
                 "provider_response": payment.provider_response,
                 "status_history": payment.status_history,
-                "status": new_status,  # Ensure status is updated
-                "payment_state": payment.payment_state  # Save payment_state
+                "status": new_status,
+                "payment_state": payment.payment_state
             }
             
-            # Always update payment_method (even if None, to clear old values)
             if status.payment_method is not None:
                 update_fields["payment_method"] = status.payment_method
             if status.confirmation_code is not None:
                 update_fields["confirmation_code"] = status.confirmation_code
             
-            # Update directly in database to ensure it's saved
             result = await self.repository.collection.update_one(
                 {"order_id": order_id},
                 {"$set": update_fields}
@@ -356,7 +324,6 @@ class PaymentService:
             
             logger.info(f"Payment status checked: order_id={order_id}, status={old_status} -> {new_status}")
             
-            # Return the updated payment from database
             final_payment = await self.repository.get_by_order_id(order_id)
             if final_payment:
                 return final_payment
@@ -380,13 +347,12 @@ class PaymentService:
         status: Optional[str] = None
     ) -> list[Payment]:
         """List payments."""
-        # Convert status filter to payment_state if it's a payment_state value
         payment_state = None
         if status:
             status_upper = status.upper()
             if status_upper in ["PENDING", "PROCESSING", "COMPLETED", "FAILED", "CANCELLED"]:
                 payment_state = status_upper
-                status = None  # Don't filter by status field
+                status = None
         
         return await self.repository.list_payments(skip, limit, status, payment_state)
 

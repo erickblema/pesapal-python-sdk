@@ -49,13 +49,10 @@ async def pesapal_webhook_post(
     Note: IPN does NOT contain payment status. You must call GetTransactionStatus API.
     """
     try:
-        # Log all headers for debugging
         logger.info(f"Webhook headers: {dict(request.headers)}")
         
-        # Get webhook data - Pesapal v3 sends JSON
         content_type = request.headers.get("content-type", "").lower()
         
-        # Read raw body first - IMPORTANT: body can only be read once
         body_bytes = await request.body()
         body_str = body_bytes.decode('utf-8') if body_bytes else ''
         logger.info(f"Webhook raw body: {body_str}")
@@ -63,14 +60,12 @@ async def pesapal_webhook_post(
         
         webhook_data = {}
         
-        # Prioritize JSON parsing (Pesapal v3 standard)
         if "application/json" in content_type or not content_type:
             try:
                 import json
                 webhook_data = json.loads(body_str) if body_str else {}
             except Exception as e:
                 logger.error(f"Error parsing JSON: {e}")
-                # Try to parse as form data as fallback
                 if body_str:
                     try:
                         from urllib.parse import parse_qs
@@ -79,7 +74,6 @@ async def pesapal_webhook_post(
                     except Exception:
                         webhook_data = {}
         elif "application/x-www-form-urlencoded" in content_type:
-            # Form data fallback
             try:
                 from urllib.parse import parse_qs
                 parsed = parse_qs(body_str, keep_blank_values=True)
@@ -88,7 +82,6 @@ async def pesapal_webhook_post(
                 logger.error(f"Error parsing form data: {e}")
                 webhook_data = {}
         else:
-            # Try JSON first, then form data
             try:
                 import json
                 webhook_data = json.loads(body_str) if body_str else {}
@@ -104,11 +97,8 @@ async def pesapal_webhook_post(
         
         logger.info(f"Webhook data received: {webhook_data}")
         
-        # Check if webhook data is empty
-        # Instead of throwing error, return IPN response with status 500 (as per Pesapal spec)
         if not webhook_data:
             logger.warning(f"Empty webhook data received. Body: {body_str}, Content-Type: {content_type}")
-            # Return IPN response format even for empty data (status 500 indicates issue)
             return {
                 "orderNotificationType": "",
                 "orderTrackingId": "",
@@ -116,8 +106,6 @@ async def pesapal_webhook_post(
                 "status": 500
             }
         
-        # Get signature from headers - check multiple possible header names
-        # Pesapal v3 may use different header names
         signature = (
             request.headers.get("X-Pesapal-Signature") or
             request.headers.get("x-pesapal-signature") or
@@ -129,13 +117,11 @@ async def pesapal_webhook_post(
             webhook_data.get("Signature")
         )
         
-        # Remove signature from data if it was in the payload
         if "signature" in webhook_data:
             del webhook_data["signature"]
         if "Signature" in webhook_data:
             del webhook_data["Signature"]
         
-        # Verify signature if present
         if signature:
             if not service.verify_signature(webhook_data, signature):
                 logger.warning("Invalid webhook signature")
@@ -144,12 +130,8 @@ async def pesapal_webhook_post(
                     detail="Invalid webhook signature"
                 )
         else:
-            # Log warning but don't fail - some Pesapal configurations may not send signature
             logger.warning("Webhook received without signature - processing anyway")
-            # In production, you might want to make this stricter
-            # For now, we'll process without signature verification
         
-        # Extract required fields for IPN response
         order_tracking_id = (
             webhook_data.get("OrderTrackingId") or
             webhook_data.get("order_tracking_id") or
@@ -169,7 +151,6 @@ async def pesapal_webhook_post(
             None
         )
         
-        # Extract order notification type from webhook data - use only what Pesapal sends
         order_notification_type = (
             webhook_data.get("OrderNotificationType") or
             webhook_data.get("order_notification_type") or
@@ -177,35 +158,25 @@ async def pesapal_webhook_post(
             None
         )
         
-        # Normalize the notification type if present (no default/mock data)
         if order_notification_type:
             order_notification_type = order_notification_type.upper().replace("_", "")
         else:
-            # Return empty string if not provided by Pesapal (no mock data)
             order_notification_type = ""
             logger.warning("OrderNotificationType not found in webhook data from Pesapal")
         
-        # Process webhook only if we have required data
         ipn_status = 500
         if order_tracking_id or order_merchant_reference:
             try:
-                # IPN does NOT contain payment status - must call GetTransactionStatus
-                # Process webhook (which will call GetTransactionStatus internally)
                 success = await service.process_webhook(webhook_data)
                 ipn_status = 200 if success else 500
                 logger.info(f"Webhook processed successfully. Status: {ipn_status}")
             except Exception as e:
                 logger.error(f"Error processing webhook synchronously: {e}")
-                # Queue for background processing
                 background_tasks.add_task(process_webhook_background, webhook_data, service)
-                ipn_status = 500  # Received but processing issue
+                ipn_status = 500
         else:
             logger.warning("Webhook received but missing required fields (OrderTrackingId or OrderMerchantReference)")
-            # Still return 500 status but don't try to process
         
-        # Return IPN response in Pesapal v3 format
-        # Format: {"orderNotificationType":"IPNCHANGE","orderTrackingId":"...","orderMerchantReference":"...","status":200}
-        # Use the actual value from Pesapal, not hardcoded
         return {
             "orderNotificationType": order_notification_type,
             "orderTrackingId": order_tracking_id or "",
@@ -240,18 +211,13 @@ async def pesapal_webhook_get(
     Note: IPN does NOT contain payment status. You must call GetTransactionStatus API.
     """
     try:
-        # Log all headers for debugging
         logger.info(f"Webhook GET headers: {dict(request.headers)}")
         
-        # Get webhook data from query parameters
         webhook_data = dict(request.query_params)
-        
-        # Convert MultiDict values to single values if needed
         webhook_data = {k: v if isinstance(v, str) else v[0] if len(v) > 0 else "" for k, v in webhook_data.items()}
         
         logger.info(f"Webhook GET data received: {webhook_data}")
         
-        # Get signature from headers or query params - check multiple variations
         signature = (
             request.headers.get("X-Pesapal-Signature") or
             request.headers.get("x-pesapal-signature") or
@@ -263,13 +229,11 @@ async def pesapal_webhook_get(
             webhook_data.get("Signature")
         )
         
-        # Remove signature from data for verification
         if "signature" in webhook_data:
             del webhook_data["signature"]
         if "Signature" in webhook_data:
             del webhook_data["Signature"]
         
-        # Verify signature if present
         if signature:
             if not service.verify_signature(webhook_data, signature):
                 logger.warning("Invalid webhook signature (GET)")
@@ -278,10 +242,8 @@ async def pesapal_webhook_get(
                     detail="Invalid webhook signature"
                 )
         else:
-            # Log warning but don't fail
             logger.warning("Webhook GET received without signature - processing anyway")
         
-        # Extract required fields for IPN response
         order_tracking_id = (
             webhook_data.get("OrderTrackingId") or
             webhook_data.get("order_tracking_id") or
@@ -300,7 +262,6 @@ async def pesapal_webhook_get(
             None
         )
         
-        # Extract order notification type from webhook data - use only what Pesapal sends
         order_notification_type = (
             webhook_data.get("OrderNotificationType") or
             webhook_data.get("order_notification_type") or
@@ -308,35 +269,25 @@ async def pesapal_webhook_get(
             None
         )
         
-        # Normalize the notification type if present (no default/mock data)
         if order_notification_type:
             order_notification_type = order_notification_type.upper().replace("_", "")
         else:
-            # Return empty string if not provided by Pesapal (no mock data)
             order_notification_type = ""
             logger.warning("OrderNotificationType not found in webhook data (GET) from Pesapal")
         
-        # Process webhook only if we have required data
         ipn_status = 500
         if order_tracking_id or order_merchant_reference:
             try:
-                # IPN does NOT contain payment status - must call GetTransactionStatus
-                # Process webhook (which will call GetTransactionStatus internally)
                 success = await service.process_webhook(webhook_data)
                 ipn_status = 200 if success else 500
                 logger.info(f"Webhook GET processed successfully. Status: {ipn_status}")
             except Exception as e:
                 logger.error(f"Error processing webhook synchronously (GET): {e}")
-                # Queue for background processing
                 background_tasks.add_task(process_webhook_background, webhook_data, service)
-                ipn_status = 500  # Received but processing issue
+                ipn_status = 500
         else:
             logger.warning("Webhook GET received but missing required fields (OrderTrackingId or OrderMerchantReference)")
-            # Still return 500 status but don't try to process
         
-        # Return IPN response in Pesapal v3 format
-        # Format: {"orderNotificationType":"IPNCHANGE","orderTrackingId":"...","orderMerchantReference":"...","status":200}
-        # Use the actual value from Pesapal, not hardcoded
         return {
             "orderNotificationType": order_notification_type,
             "orderTrackingId": order_tracking_id or "",

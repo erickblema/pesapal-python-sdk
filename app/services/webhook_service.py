@@ -19,7 +19,7 @@ class WebhookService:
     
     def __init__(self):
         self.repository = PaymentRepository()
-        self.payment_service = PaymentService()  # For calling GetTransactionStatus
+        self.payment_service = PaymentService()
     
     def verify_signature(self, data: Dict[str, Any], signature: str) -> bool:
         """
@@ -47,8 +47,6 @@ class WebhookService:
         Returns:
             True if processed successfully
         """
-        # Pesapal v3 uses different field names - handle both variations
-        # Try camelCase first (v3), then fallback to other formats
         order_tracking_id = (
             webhook_data.get("OrderTrackingId") or
             webhook_data.get("order_tracking_id") or
@@ -97,7 +95,6 @@ class WebhookService:
             logger.error(f"Invalid webhook data: missing required fields. Data: {webhook_data}")
             raise ValueError("Invalid webhook data: missing OrderTrackingId or OrderMerchantReference")
         
-        # Get payment by tracking ID or order ID
         payment = None
         if order_tracking_id:
             payment = await self.repository.get_by_tracking_id(order_tracking_id)
@@ -108,7 +105,6 @@ class WebhookService:
             logger.warning(f"Webhook received for unknown payment: tracking_id={order_tracking_id}, order_id={order_merchant_reference}")
             return False
         
-        # Update payment webhook flags
         await self.repository.collection.update_one(
             {"order_id": payment.order_id},
             {
@@ -120,7 +116,6 @@ class WebhookService:
             }
         )
         
-        # Add webhook received event
         webhook_event = {
             "event_type": "WEBHOOK_RECEIVED",
             "status": payment.status,
@@ -135,14 +130,11 @@ class WebhookService:
         }
         await self.repository.add_event(payment.order_id, webhook_event)
         
-        # IMPORTANT: IPN does NOT contain payment status (as per Pesapal docs)
-        # We must call GetTransactionStatus API to get the actual status
         try:
             logger.info(f"Fetching payment status from Pesapal for order_id={payment.order_id}")
             old_status = payment.status
             updated_payment = await self.payment_service.check_payment_status(payment.order_id)
             
-            # Add status updated event
             status_update_event = {
                 "event_type": "STATUS_UPDATED_VIA_WEBHOOK",
                 "status": updated_payment.status,
@@ -162,7 +154,6 @@ class WebhookService:
             return True
         except Exception as e:
             logger.error(f"Error fetching payment status from Pesapal: {e}")
-            # Fallback to using webhook data if GetTransactionStatus fails
             if order_status:
                 await self.repository.update_status(
                     payment.order_id,

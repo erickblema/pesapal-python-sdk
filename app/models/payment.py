@@ -23,11 +23,11 @@ class PaymentEvent:
         self,
         event_type: str,
         status: str,
-        source: str,  # "CREATION", "CALLBACK", "WEBHOOK", "MANUAL_CHECK"
+        source: str,
         metadata: Optional[Dict[str, Any]] = None,
         timestamp: Optional[datetime] = None
     ):
-        self.event_type = event_type  # "CREATED", "STATUS_CHANGED", "CALLBACK_RECEIVED", "WEBHOOK_RECEIVED"
+        self.event_type = event_type
         self.status = status
         self.source = source
         self.metadata = metadata or {}
@@ -75,18 +75,18 @@ class Payment:
         branch: Optional[str] = None,
         fees: Optional[Decimal] = None,
         net_amount: Optional[Decimal] = None,
-        total_amount: Optional[Decimal] = None,  # amount + fees
+        total_amount: Optional[Decimal] = None,
         payment_provider: str = "PESAPAL",
-        provider_response: Optional[dict] = None,  # Full response from provider
+        provider_response: Optional[dict] = None,
         callback_received: bool = False,
         callback_received_at: Optional[datetime] = None,
         webhook_received: bool = False,
         webhook_received_at: Optional[datetime] = None,
         last_status_check: Optional[datetime] = None,
-        status_history: Optional[List[Dict[str, Any]]] = None,  # Status change history
+        status_history: Optional[List[Dict[str, Any]]] = None,
         events: Optional[List[PaymentEvent]] = None,
         metadata: Optional[Dict[str, Any]] = None,
-        payment_state: Optional[str] = None,  # Clear payment state: PENDING, PROCESSING, COMPLETED, FAILED, CANCELLED
+        payment_state: Optional[str] = None,
         created_at: Optional[datetime] = None,
         updated_at: Optional[datetime] = None,
         _id: Optional[ObjectId] = None
@@ -118,7 +118,6 @@ class Payment:
         self.status_history = status_history or []
         self.events = events or []
         self.metadata = metadata or {}
-        # Calculate payment_state if not provided, or use provided value
         self.payment_state = payment_state or self.get_payment_state()
         self.created_at = created_at or datetime.utcnow()
         self.updated_at = updated_at or datetime.utcnow()
@@ -155,7 +154,6 @@ class Payment:
         }
         self.status_history.append(status_entry)
         self.status = new_status
-        # Update payment_state when status changes
         self.payment_state = self.get_payment_state()
         self.updated_at = datetime.utcnow()
         return status_entry
@@ -164,31 +162,18 @@ class Payment:
         """
         Get clear payment state based on status code and payment completion indicators.
         
-        IMPORTANT: 
-        - Pesapal returns "200" when payment is submitted, NOT when completed
-        - A payment is only COMPLETED when it has payment_method or confirmation_code
-        - Status codes: "200" (submitted/completed), "FAILED", "INVALID", "REVERSED"
-        
         Returns:
             PaymentState enum value (PENDING, PROCESSING, COMPLETED, FAILED, CANCELLED)
         """
         status_code = str(self.status).upper()
-        
-        # Check if payment is actually completed (has payment method or confirmation code)
         is_actually_completed = bool(self.payment_method or self.confirmation_code)
         
-        # Handle different status codes
         if status_code == "200":
-            # "200" from Pesapal can mean:
-            # 1. Payment submitted to Pesapal (not yet paid) - should be PENDING
-            # 2. Payment completed by customer (has payment_method/confirmation_code) - should be COMPLETED
             if is_actually_completed:
                 return PaymentState.COMPLETED.value
             else:
-                # Submitted but not yet paid - customer still needs to complete payment
                 return PaymentState.PENDING.value
         elif status_code == "REVERSED":
-            # Payment was reversed
             return PaymentState.FAILED.value
         elif status_code in ["FAILED", "ERROR", "INVALID", "0"]:
             return PaymentState.FAILED.value
@@ -197,7 +182,6 @@ class Payment:
         elif status_code == "CANCELLED":
             return PaymentState.CANCELLED.value
         else:
-            # Default to pending if status is unclear
             return PaymentState.PENDING.value
     
     def is_completed(self) -> bool:
@@ -214,7 +198,6 @@ class Payment:
     
     def to_dict(self) -> dict:
         """Convert to dictionary for MongoDB."""
-        # Ensure payment_state is up-to-date before saving
         current_payment_state = self.get_payment_state()
         data = {
             "order_id": self.order_id,
@@ -222,7 +205,7 @@ class Payment:
             "currency": self.currency,
             "description": self.description,
             "status": self.status,
-            "payment_state": current_payment_state,  # Save payment_state to database
+            "payment_state": current_payment_state,
             "order_tracking_id": self.order_tracking_id,
             "redirect_url": self.redirect_url,
             "payment_method": self.payment_method,
@@ -286,11 +269,10 @@ class Payment:
             status_history=data.get("status_history", []),
             events=events,
             metadata=data.get("metadata", {}),
-            payment_state=data.get("payment_state"),  # Read payment_state from database if available
+            payment_state=data.get("payment_state"),
             created_at=data.get("created_at"),
             updated_at=data.get("updated_at"),
         )
-        # If payment_state wasn't in database, ensure it's set (will be calculated in __init__)
         if not payment.payment_state:
             payment.payment_state = payment.get_payment_state()
         return payment

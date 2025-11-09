@@ -36,7 +36,6 @@ async def create_payment(
     - **billing_address**: Optional billing address
     """
     try:
-        # Validate currency before processing
         currency_upper = request.currency.upper()
         if currency_upper not in ["KES", "TZS", "UGX", "RWF", "USD"]:
             raise HTTPException(
@@ -53,14 +52,12 @@ async def create_payment(
             billing_address=request.billing_address
         )
         
-        # Check if payment was successfully initiated
         if not payment.order_tracking_id or not payment.redirect_url:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Payment initiation failed: No tracking ID or redirect URL received. Check Pesapal credentials and API status."
             )
         
-        # Get clear payment state
         payment_state = payment.get_payment_state()
         
         return PaymentResponse(
@@ -123,7 +120,6 @@ async def payment_callback(
     This endpoint automatically fetches and updates payment status from Pesapal.
     """
     try:
-        # Get query parameters (Pesapal sends them in camelCase)
         order_tracking_id = OrderTrackingId or request.query_params.get("OrderTrackingId")
         order_notification_type = OrderNotificationType or request.query_params.get("OrderNotificationType")
         order_merchant_reference = OrderMerchantReference or request.query_params.get("OrderMerchantReference")
@@ -139,7 +135,6 @@ async def payment_callback(
                 detail="Missing required parameters: OrderTrackingId or OrderMerchantReference"
             )
         
-        # Find payment by tracking ID or order ID
         payment = None
         if order_tracking_id:
             payment = await service.repository.get_by_tracking_id(order_tracking_id)
@@ -153,7 +148,6 @@ async def payment_callback(
                 detail=f"Payment not found for tracking ID: {order_tracking_id or order_merchant_reference}"
             )
         
-        # Update payment callback flags
         await service.repository.collection.update_one(
             {"order_id": payment.order_id},
             {
@@ -165,7 +159,6 @@ async def payment_callback(
             }
         )
         
-        # Add callback received event
         callback_event = {
             "event_type": "CALLBACK_RECEIVED",
             "status": payment.status,
@@ -179,43 +172,36 @@ async def payment_callback(
         }
         await service.repository.add_event(payment.order_id, callback_event)
         
-        # Automatically fetch fresh status from Pesapal (as per Pesapal docs)
         try:
             logger.info(f"Fetching payment status from Pesapal for callback: order_id={payment.order_id}")
             updated_payment = await service.check_payment_status(payment.order_id)
             logger.info(f"Payment status updated via callback: order_id={payment.order_id}, status={updated_payment.status}")
             
-            # Verify the status was actually updated
             if updated_payment.status != payment.status:
                 logger.info(f"Status changed: {payment.status} -> {updated_payment.status}")
             else:
                 logger.warning(f"Status check completed but status unchanged: {updated_payment.status}")
         except Exception as e:
             logger.error(f"Error fetching payment status from Pesapal: {e}", exc_info=True)
-            # Continue with existing payment data if status check fails
             updated_payment = payment
         
-        # Get fresh payment data from database
         updated_payment = await service.get_payment(payment.order_id)
         if not updated_payment:
             updated_payment = payment
         
-        # Check if client wants JSON (API call) or HTML (browser redirect)
         accept_header = request.headers.get("accept", "")
         wants_json = "application/json" in accept_header or request.query_params.get("format") == "json"
         
         if wants_json:
-            # Get clear payment state
             payment_state = updated_payment.get_payment_state()
             
-            # Return JSON for API calls
             response_data = {
                 "message": "Payment callback received",
                 "payment": {
                     "order_id": updated_payment.order_id,
                     "order_tracking_id": updated_payment.order_tracking_id,
-                    "status": updated_payment.status,  # Raw status code
-                    "payment_state": payment_state,  # Clear state: PENDING, PROCESSING, COMPLETED, FAILED, CANCELLED
+                    "status": updated_payment.status,
+                    "payment_state": payment_state,
                     "amount": str(updated_payment.amount),
                     "currency": updated_payment.currency,
                     "payment_method": updated_payment.payment_method,
@@ -236,7 +222,6 @@ async def payment_callback(
                 "status_history": updated_payment.status_history
             }
             
-            # Include event history if available
             if updated_payment.events:
                 response_data["events"] = [
                     {
@@ -251,10 +236,8 @@ async def payment_callback(
             
             return response_data
         else:
-            # Return HTML page for browser redirects (default)
             from fastapi.responses import HTMLResponse
             
-            # Determine payment status message from payment state
             payment_state = updated_payment.get_payment_state()
             if payment_state == "COMPLETED":
                 status_message = "Payment Successful!"
@@ -431,7 +414,6 @@ async def get_payment(
             detail=f"Payment not found: {order_id}"
         )
     
-    # Get clear payment state
     payment_state = payment.get_payment_state()
     
     response_data = {
@@ -441,8 +423,8 @@ async def get_payment(
             "amount": str(payment.amount),
             "currency": payment.currency,
             "description": payment.description,
-            "status": payment.status,  # Raw status code from Pesapal
-            "payment_state": payment_state,  # Clear state: PENDING, PROCESSING, COMPLETED, FAILED, CANCELLED
+            "status": payment.status,
+            "payment_state": payment_state,
             "order_tracking_id": payment.order_tracking_id,
             "redirect_url": payment.redirect_url,
             "payment_method": payment.payment_method,
@@ -541,7 +523,6 @@ async def get_transaction_status(
     Returns payment status information from Pesapal.
     """
     try:
-        # Find payment by tracking ID
         payment = await service.repository.get_by_tracking_id(orderTrackingId)
         
         if not payment:
@@ -550,7 +531,6 @@ async def get_transaction_status(
                 detail=f"Payment not found for tracking ID: {orderTrackingId}"
             )
         
-        # Get fresh status from Pesapal
         updated_payment = await service.check_payment_status(payment.order_id)
         
         from app.schema.payment import PaymentEventResponse
@@ -615,7 +595,7 @@ async def list_payments(
             currency=p.currency,
             description=p.description,
             status=p.status,
-            payment_state=p.payment_state or p.get_payment_state(),  # Use stored payment_state or calculate it
+            payment_state=p.payment_state or p.get_payment_state(),
             order_tracking_id=p.order_tracking_id,
             redirect_url=p.redirect_url,
             payment_method=p.payment_method,
@@ -650,7 +630,6 @@ async def refund_payment(
     - **remarks**: Reason/description for the refund (required)
     """
     try:
-        # Convert string amount to Decimal for validation
         try:
             refund_amount = Decimal(amount)
             if refund_amount <= 0:
@@ -664,7 +643,6 @@ async def refund_payment(
                 detail=f"Invalid amount format: {amount}. Expected format: '100.00'"
             )
         
-        # Get payment to retrieve confirmation_code
         payment = await service.repository.get_by_tracking_id(order_tracking_id)
         if not payment:
             raise HTTPException(
@@ -672,19 +650,15 @@ async def refund_payment(
                 detail=f"Payment not found for tracking ID: {order_tracking_id}"
             )
         
-        # Check if payment has confirmation_code (required for refund)
         if not payment.confirmation_code:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Payment does not have a confirmation_code. Only completed payments can be refunded."
             )
         
-        # Get the actual paid amount from provider_response if available
-        # Pesapal may have different amount due to fees or adjustments
         actual_paid_amount = payment.amount
         if payment.provider_response and "amount" in payment.provider_response:
             try:
-                # Use amount from provider response if available (this is what Pesapal actually processed)
                 provider_amount = payment.provider_response.get("amount")
                 if isinstance(provider_amount, (int, float)):
                     actual_paid_amount = Decimal(str(provider_amount))
@@ -693,22 +667,17 @@ async def refund_payment(
                 elif isinstance(provider_amount, Decimal):
                     actual_paid_amount = provider_amount
             except (ValueError, TypeError):
-                # Fallback to payment.amount if provider amount is invalid
                 pass
         
-        # Validate amount doesn't exceed payment amount
         if refund_amount > actual_paid_amount:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Refund amount ({refund_amount}) cannot exceed payment amount ({actual_paid_amount})"
             )
         
-        # Ensure amount is formatted with exactly 2 decimal places for Pesapal
-        # Pesapal is very strict about amount format matching the original transaction
         refund_amount_str = f"{refund_amount:.2f}"
         actual_paid_amount_str = f"{actual_paid_amount:.2f}"
         
-        # Log payment details for debugging
         logger.info(
             f"Refund request: order_tracking_id={order_tracking_id}, "
             f"payment_amount={actual_paid_amount} ({actual_paid_amount_str}), "
@@ -729,7 +698,7 @@ async def refund_payment(
             "message": "Refund request submitted successfully",
             "order_tracking_id": order_tracking_id,
             "confirmation_code": payment.confirmation_code,
-            "amount": amount,  # Return the original string format
+            "amount": amount,
             "result": result
         }
     except HTTPException:
@@ -756,7 +725,6 @@ async def cancel_payment(
     - **order_tracking_id**: Pesapal order tracking ID
     """
     try:
-        # Get payment to check its status
         payment = await service.repository.get_by_tracking_id(order_tracking_id)
         if not payment:
             raise HTTPException(
@@ -764,28 +732,17 @@ async def cancel_payment(
                 detail=f"Payment not found for tracking ID: {order_tracking_id}"
             )
         
-        # Fetch latest status from Pesapal to ensure we have current state
         try:
             logger.info(f"Fetching latest payment status before cancellation: {order_tracking_id}")
             updated_payment = await service.check_payment_status(payment.order_id)
             payment = updated_payment
         except Exception as e:
             logger.warning(f"Could not fetch latest status from Pesapal, using cached status: {e}")
-            # Continue with existing payment data
         
-        # Check if payment can be cancelled
-        # Only PENDING payments can be cancelled (not completed, processing, or failed)
         payment_state = payment.get_payment_state()
         is_completed = payment.is_completed()
         has_confirmation_code = bool(payment.confirmation_code)
         has_payment_method = bool(payment.payment_method)
-        
-        # Determine if payment is cancellable
-        # Payment is NOT cancellable if:
-        # 1. It has a confirmation_code (completed payment)
-        # 2. It has a payment_method (completed payment)
-        # 3. Payment state is COMPLETED
-        # 4. Status is "200" AND has completion indicators
         
         if is_completed or has_confirmation_code or has_payment_method:
             raise HTTPException(
@@ -800,7 +757,6 @@ async def cancel_payment(
                 )
             )
         
-        # Check if payment status indicates it's already processed
         status_upper = str(payment.status).upper()
         if status_upper in ["COMPLETED", "PROCESSING", "200"] and (has_confirmation_code or has_payment_method):
             raise HTTPException(
