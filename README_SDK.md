@@ -229,8 +229,9 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## Support
 
 For issues and questions:
-- GitHub Issues: [https://github.com/yourusername/pesapal-python-sdk/issues](https://github.com/yourusername/pesapal-python-sdk/issues)
+- GitHub Issues: [https://github.com/erickblema/pesapal-python-sdk/issues](https://github.com/erickblema/pesapal-python-sdk/issues)
 - Pesapal Documentation: [https://developer.pesapal.com](https://developer.pesapal.com)
+- Contact: ericklema360@gmail.com
 
 ## Changelog
 

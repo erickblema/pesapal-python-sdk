@@ -55,9 +55,9 @@ sdk-payments/
 ### 1. Update Package Metadata
 
 **In `pyproject.toml` and `setup.py`:**
-- [ ] Replace `"Your Name"` with your actual name
-- [ ] Replace `"your.email@example.com"` with your email
-- [ ] Update GitHub URLs with your repository
+- ✅ Author name: Erick Lema
+- ✅ Author email: ericklema360@gmail.com
+- [ ] Update GitHub URLs with your repository (if you have one)
 - [ ] Verify package name availability on PyPI
 
 ### 2. Update Documentation
@@ -187,8 +187,8 @@ See `PUBLISH.md` for detailed instructions.
 The SDK is well-structured and ready. Just update the metadata (name, email, URLs) and you're good to go!
 
 **Next Steps:**
-1. Update metadata in `pyproject.toml` and `setup.py`
-2. Update URLs in `README_SDK.md`
+1. ✅ Metadata updated in `pyproject.toml` and `setup.py`
+2. [ ] Update URLs in `README_SDK.md` (if you have a GitHub repository)
 3. Test build locally
 4. Publish to TestPyPI
 5. Publish to PyPI

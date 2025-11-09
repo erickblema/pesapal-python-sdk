@@ -20,9 +20,9 @@ setup(
     description="Python SDK for Pesapal Payment Gateway API 3.0",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    author="Your Name",
-    author_email="your.email@example.com",
-    url="https://github.com/yourusername/pesapal-python-sdk",
+    author="Erick Lema",
+    author_email="ericklema360@gmail.com",
+    url="https://github.com/erickblema/pesapal-python-sdk",
     packages=find_packages(exclude=["tests", "app", "*.tests", "*.tests.*"]),
     python_requires=">=3.8",
     install_requires=[

@@ -10,7 +10,7 @@ readme = "README_SDK.md"
 requires-python = ">=3.8"
 license = "MIT"
 authors = [
-    {name = "Your Name", email = "your.email@example.com"}
+    {name = "Erick Lema", email = "ericklema360@gmail.com"}
 ]
 keywords = ["pesapal", "payment", "gateway", "sdk", "api", "fintech"]
 classifiers = [
@@ -40,10 +40,10 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourusername/pesapal-python-sdk"
-Documentation = "https://github.com/yourusername/pesapal-python-sdk#readme"
-Repository = "https://github.com/yourusername/pesapal-python-sdk"
-Issues = "https://github.com/yourusername/pesapal-python-sdk/issues"
+Homepage = "https://github.com/erickblema/pesapal-python-sdk"
+Documentation = "https://github.com/erickblema/pesapal-python-sdk#readme"
+Repository = "https://github.com/erickblema/pesapal-python-sdk"
+Issues = "https://github.com/erickblema/pesapal-python-sdk/issues"
 
 [tool.setuptools]
 packages = ["pesapal"]

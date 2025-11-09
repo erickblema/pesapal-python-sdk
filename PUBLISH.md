@@ -13,19 +13,19 @@ This guide explains how to publish the Pesapal Python SDK to PyPI.
 
 ## Step 1: Update Package Information
 
-Before publishing, update the following files with your information:
+Before publishing, update the following files if needed:
 
 1. **`pyproject.toml`**:
-   - Update `authors` with your name and email
-   - Update `project.urls` with your GitHub repository URLs
+   - ✅ Author information is set (Erick Lema, ericklema360@gmail.com)
+   - Update `project.urls` with your GitHub repository URLs (if you have a repository)
 
 2. **`setup.py`**:
-   - Update `author` and `author_email`
-   - Update `url` with your repository URL
+   - ✅ Author information is set
+   - Update `url` with your repository URL (if you have a repository)
 
 3. **`README_SDK.md`**:
-   - Update GitHub repository URLs
-   - Update support links
+   - Update GitHub repository URLs (if you have a repository)
+   - Update support links (if needed)
 
 ## Step 2: Build the Package
 
