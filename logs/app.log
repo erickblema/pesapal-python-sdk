@@ -2290,3 +2290,9 @@ pesapal.exceptions.PesapalAPIError: Invalid IPN registration response: Missing n
 2025-11-09 23:24:44 - main - INFO - Starting application...
 2025-11-09 23:24:46 - app.database.db - INFO - MongoDB connected: payments-helper-db
 2025-11-09 23:24:46 - main - INFO - Application started successfully
+2025-11-09 23:29:11 - main - INFO - Shutting down application...
+2025-11-09 23:29:11 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 23:29:11 - main - INFO - Application shut down
+2025-11-09 23:29:12 - main - INFO - Starting application...
+2025-11-09 23:29:14 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 23:29:14 - main - INFO - Application started successfully
