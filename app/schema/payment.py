@@ -35,10 +35,15 @@ class PaymentResponse(BaseModel):
     @model_serializer
     def serialize_model(self) -> dict:
         """Serialize model with OrderTrackingId in camelCase and amount as string."""
-        # Determine payment state from status
+        # Determine payment state from status and completion indicators
+        # IMPORTANT: "200" from Pesapal means "submitted", not "completed"
+        # Payment is only COMPLETED when it has payment_method or confirmation_code
         status_code = str(self.status).upper()
+        is_actually_completed = bool(self.payment_method or self.confirmation_code)
+        
         if status_code == "200":
-            payment_state = "COMPLETED"
+            # "200" can mean submitted (PENDING) or completed (COMPLETED)
+            payment_state = "COMPLETED" if is_actually_completed else "PENDING"
         elif status_code in ["PENDING", "PROCESSING"]:
             payment_state = "PROCESSING"
         elif status_code in ["FAILED", "ERROR", "0"]:

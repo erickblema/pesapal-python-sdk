@@ -140,7 +140,10 @@ class PaymentService:
             old_status = payment.status
             payment.order_tracking_id = response.order_tracking_id
             payment.redirect_url = response.redirect_url
-            payment.status = response.status or "200"  # Pesapal returns "200" for successful creation
+            # IMPORTANT: Pesapal returns "200" when payment is submitted, NOT when completed
+            # Payment is still PENDING until customer completes it
+            # We keep the status as "200" (Pesapal's response) but payment_state will be PENDING
+            payment.status = response.status or "200"  # Pesapal returns "200" for successful submission
             payment.provider_response = response.model_dump()
             
             # Add status change
