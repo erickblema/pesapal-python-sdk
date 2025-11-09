@@ -992,3 +992,24 @@ ValueError: Invalid webhook data: missing OrderTrackingId or OrderMerchantRefere
 2025-11-09 16:45:18 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
 2025-11-09 16:45:18 - pesapal.client - INFO - Submitting payment order: TX-testing3 - 1000.0 TZS
 2025-11-09 16:45:18 - app.services.payment_service - INFO - Payment initiated successfully: order_id=TX-testing3, tracking_id=4dabc4c9-6475-43e7-8a78-db1c25315042
+2025-11-09 16:51:03 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
+2025-11-09 16:51:03 - pesapal.client - INFO - Submitting payment order: TX-testing4 - 1000.0 TZS
+2025-11-09 16:51:03 - app.services.payment_service - INFO - Payment initiated successfully: order_id=TX-testing4, tracking_id=987d115b-c962-48cc-add7-db1c33532d24
+2025-11-09 16:56:05 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
+2025-11-09 16:56:05 - pesapal.client - INFO - Submitting payment order: TX-testing5 - 1000.0 TZS
+2025-11-09 16:56:06 - app.services.payment_service - INFO - Payment initiated successfully: order_id=TX-testing5, tracking_id=ac70fcfa-62ef-4d7b-96ee-db1c2d3719bd
+2025-11-09 17:03:15 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
+2025-11-09 17:03:15 - pesapal.client - INFO - Submitting payment order: TX-testing6 - 1000.0 TZS
+2025-11-09 17:03:16 - app.services.payment_service - INFO - Payment initiated successfully: order_id=TX-testing6, tracking_id=e412b1e4-3875-4a8b-ab66-db1c4da0d2f5
+2025-11-09 17:07:04 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
+2025-11-09 17:07:04 - pesapal.client - INFO - Submitting payment order: TX-testing7 - 1000.0 TZS
+2025-11-09 17:07:04 - app.services.payment_service - INFO - Payment initiated successfully: order_id=TX-testing7, tracking_id=b83cab81-0ae3-4f11-adda-db1c7dd8efed
+2025-11-09 17:09:29 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
+2025-11-09 17:09:29 - pesapal.client - INFO - Submitting payment order: TX-testing8 - 1000.0 TZS
+2025-11-09 17:09:30 - app.services.payment_service - INFO - Payment initiated successfully: order_id=TX-testing8, tracking_id=99cf5b9b-db3d-4f70-b139-db1c44633c82
+2025-11-09 17:12:10 - main - INFO - Shutting down application...
+2025-11-09 17:12:10 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 17:12:10 - main - INFO - Application shut down
+2025-11-09 17:12:11 - main - INFO - Starting application...
+2025-11-09 17:12:13 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 17:12:13 - main - INFO - Application started successfully
