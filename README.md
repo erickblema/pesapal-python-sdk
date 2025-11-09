@@ -1,251 +1,130 @@
-# Pesapal Payment SDK
+# Pesapal Python SDK
 
-FastAPI-based payment integration with Pesapal API 3.0, featuring complete transaction tracking and webhook handling.
+[![PyPI version](https://badge.fury.io/py/pesapal-python-sdk.svg)](https://badge.fury.io/py/pesapal-python-sdk)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 
-## Quick Start
+Python SDK for Pesapal Payment Gateway API 3.0 - Clean, async interface for payment processing.
 
-### 1. Install Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### 2. Environment Setup
-
-Create a `.env` file in the project root:
-
-```env
-# MongoDB Configuration
-MONGODB_URL=mongodb+srv://username:password@cluster.mongodb.net/?appName=Cluster0
-MONGODB_DB_NAME=sdk_payments
-
-# Pesapal API 3.0 Configuration
-PESAPAL_CONSUMER_KEY=your_consumer_key_here
-PESAPAL_CONSUMER_SECRET=your_consumer_secret_here
-PESAPAL_SANDBOX=true
-PESAPAL_CALLBACK_URL=https://your-domain.com/payments/callback
-PESAPAL_IPN_URL=https://your-domain.com/webhooks/pesapal
-PESAPAL_IPN_ID=your_ipn_notification_id_here
-```
-
-### 3. Get Pesapal Credentials
-
-1. **Consumer Key & Secret:**
-   - Log into Pesapal merchant dashboard
-   - Go to Settings → API Credentials
-   - Copy Consumer Key and Consumer Secret
-
-2. **IPN Notification ID:**
-   - Go to Settings → IPN (Instant Payment Notification)
-   - Register your IPN URL: `https://your-domain.com/webhooks/pesapal`
-   - Copy the IPN Notification ID
-   - Add to `.env` as `PESAPAL_IPN_ID`
-
-**Note:** IPN_ID is required for Pesapal API 3.0. For local testing, use ngrok to expose your server.
-
-### 4. Run the Application
+## 🚀 Quick Start
 
 ```bash
-uvicorn main:app --reload
+pip install pesapal-python-sdk
 ```
 
-Access Swagger UI at: `http://localhost:8000/docs`
+```python
+from pesapal import PesapalClient, PaymentRequest
+from decimal import Decimal
 
-## API Endpoints
+# Initialize client
+client = PesapalClient(
+    consumer_key="your_key",
+    consumer_secret="your_secret",
+    sandbox=True
+)
 
-### Payment Endpoints
+# Submit payment
+payment = PaymentRequest(
+    id="ORDER-123",
+    amount=Decimal("1000.00"),
+    currency="KES",
+    description="Payment for order #123",
+    callback_url="https://your-domain.com/callback",
+    notification_id="your_ipn_id"
+)
 
-- **POST `/payments/`** - Create payment
-  ```json
-  {
-    "order_id": "ORDER-123",
-    "amount": 1000,
-    "currency": "TZS",
-    "description": "Payment description",
-    "billing_address": {
-      "email_address": "customer@example.com",
-      "phone_number": "+255123456789",
-      "country_code": "TZ",
-      "first_name": "John",
-      "middle_name": "",
-      "last_name": "Doe",
-      "line_1": "Street Address",
-      "line_2": "",
-      "city": "Dar es Salaam",
-      "state": "",
-      "postal_code": "",
-      "zip_code": ""
-    }
-  }
-  ```
-
-- **GET `/payments/callback`** - Payment callback handler
-  - ⚠️ **AUTOMATIC**: Called automatically by Pesapal when redirecting users after payment
-  - You do NOT need to call this endpoint manually
-  - Automatically fetches payment status from Pesapal
-  - Updates database with latest status
-  - Shows HTML success/failure page to user (or JSON if requested)
-
-- **GET `/payments/{order_id}`** - Get payment details
-  - Returns payment info, status history, event history
-
-- **GET `/payments/{order_id}/status`** - Check payment status
-  - Fetches latest status from Pesapal
-  - Updates payment record
-
-
-- **GET `/payments/status/transaction?orderTrackingId={id}`** - Get status by tracking ID
-
-- **GET `/payments/`** - List payments (with optional status filter)
-
-### Webhook Endpoints
-
-- **POST `/webhooks/pesapal`** - IPN webhook handler
-  - Receives payment notifications from Pesapal
-  - Automatically fetches payment status
-  - Returns IPN response format
-
-## Database Structure
-
-### Payments Collection
-
-Stores main payment records with:
-- Payment details (amount, currency, status)
-- Tracking information (order_tracking_id, redirect_url)
-- Status history (all status changes with timestamps)
-- Event history (all payment events)
-- Callback/webhook tracking (flags and timestamps)
-- Provider responses (full Pesapal API responses)
-
-
-### Status History
-
-Every status change is tracked:
-```json
-{
-  "old_status": "PENDING",
-  "new_status": "200",
-  "source": "CALLBACK",
-  "reason": "Payment completed",
-  "timestamp": "2025-11-09T02:10:00Z"
-}
+response = await client.submit_order(payment)
+print(f"Redirect: {response.redirect_url}")
 ```
 
-### Event History
+## ✨ Features
 
-All events are tracked:
-- `CREATED` - Payment created
-- `SUBMITTED_TO_PESAPAL` - Submitted to Pesapal
-- `CALLBACK_RECEIVED` - Callback received
-- `WEBHOOK_RECEIVED` - Webhook received
-- `STATUS_CHECKED` - Status checked from Pesapal
-- `STATUS_UPDATED_VIA_WEBHOOK` - Status updated via webhook
+- ✅ Async/await support
+- ✅ Type-safe with Pydantic
+- ✅ Payment processing & status checking
+- ✅ Refunds & cancellations
+- ✅ IPN management
+- ✅ Webhook signature verification
+- ✅ Sandbox & production modes
 
-## Example Payment Flow
+## 📚 Documentation
 
-1. **Create Payment:**
-   ```bash
-   POST /payments/
-   ```
-   - Creates payment record
-   - Creates transaction record
-   - Returns redirect URL for customer
+- **Full Documentation**: See [README_SDK.md](README_SDK.md)
+- **API Reference**: [GitHub Repository](https://github.com/erickblema/pesapal-python-sdk)
+- **Pesapal Docs**: [developer.pesapal.com](https://developer.pesapal.com)
 
-2. **Customer Completes Payment:**
-   - Customer redirected to Pesapal
-   - Completes payment on Pesapal
-   - Pesapal automatically redirects user back to your callback URL
-
-3. **Callback Automatically Triggered:**
-   - ⚠️ **AUTOMATIC**: Pesapal automatically calls `/payments/callback` with query parameters
-   - You do NOT need to call this manually
-   - Endpoint automatically:
-     - Receives callback data from Pesapal
-     - Fetches fresh status from Pesapal API
-     - Updates database with latest status
-     - Shows success/failure HTML page to user
-
-4. **Webhook Automatically Triggered:**
-   - ⚠️ **AUTOMATIC**: Pesapal automatically sends IPN webhook to `/webhooks/pesapal`
-   - You do NOT need to call this manually
-   - Endpoint automatically:
-     - Receives IPN notification
-     - Fetches payment status
-     - Updates payment and transaction records
-     - Returns IPN response to Pesapal
-
-## Response Format
-
-### Payment Response
-```json
-{
-  "_id": "690fb56aba1b44e85870105f",
-  "order_id": "ORDER-123",
-  "amount": "1000",
-  "currency": "TZS",
-  "status": "200",
-  "OrderTrackingId": "09369ec3-04a2-4eca-8b8c-db1c25b29552",
-  "redirect_url": "https://cybqa.pesapal.com/pesapaliframe/...",
-  "payment_method": "Visa",
-  "confirmation_code": "ABC123",
-  "created_at": "2025-11-09T02:09:00Z",
-  "updated_at": "2025-11-09T02:10:00Z"
-}
-```
-
-### Callback Response
-```json
-{
-  "message": "Payment callback received",
-  "payment": { /* complete payment details */ },
-  "status_history": [ /* all status changes */ ],
-  "transactions": [ /* all transactions */ ],
-  "events": [ /* all events */ ]
-}
-```
-
-## Development
-
-### Project Structure
-
-```
-.
-├── main.py                 # FastAPI application entry point
-├── app/
-│   ├── config/            # Configuration settings
-│   ├── database/          # MongoDB connection
-│   ├── models/            # Data models (Payment, Transaction)
-│   ├── repositories/      # Database operations
-│   ├── routers/           # API routes
-│   ├── schema/            # Pydantic schemas
-│   └── services/          # Business logic
-├── pesapal/               # Pesapal API client
-└── requirements.txt       # Python dependencies
-```
-
-### Key Features
-
-- Complete transaction tracking
-- Status history with timestamps
-- Event logging
-- Callback and webhook handling
-- Automatic status synchronization
-- Transaction reconciliation support
-
-## Testing
-
-Use Swagger UI at `/docs` to test endpoints. For webhook testing, use ngrok to expose your local server:
+## 🔧 Installation
 
 ```bash
-ngrok http 8000
+pip install pesapal-python-sdk
 ```
 
-Then use the ngrok URL for your IPN URL in Pesapal dashboard.
+## 💡 Usage Examples
 
-## Notes
+### Check Payment Status
 
-- IPN_ID is required for Pesapal API 3.0
-- IPN URL must be publicly accessible
-- Sandbox and Production use different credentials
-- All timestamps are in UTC
-- Status codes: "200" = completed, "PENDING" = pending, etc.
+```python
+status = await client.get_payment_status(
+    order_tracking_id="tracking-id",
+    order_id="ORDER-123"
+)
+print(f"Status: {status.payment_status_description}")
+```
+
+### Process Refund
+
+```python
+result = await client.refund_order(
+    confirmation_code="confirmation-code",
+    amount=Decimal("500.00"),
+    username="admin",
+    remarks="Customer requested refund"
+)
+```
+
+### Register IPN
+
+```python
+ipn = await client.register_ipn(
+    ipn_url="https://your-domain.com/webhooks/pesapal",
+    ipn_notification_type="POST"
+)
+print(f"IPN ID: {ipn.notification_id}")
+```
+
+## 🏗️ Project Structure
+
+```
+pesapal-python-sdk/
+├── pesapal/              # SDK package
+│   ├── client.py        # Main client
+│   ├── models.py        # Pydantic models
+│   ├── exceptions.py    # Error handling
+│   └── utils.py         # Utilities
+├── app/                 # FastAPI example app (not published)
+└── README_SDK.md        # Full SDK documentation
+```
+
+## 📦 Requirements
+
+- Python 3.8+
+- httpx >= 0.24.0
+- pydantic >= 2.0.0
+
+## 🔗 Links
+
+- **PyPI**: [pypi.org/project/pesapal-python-sdk](https://pypi.org/project/pesapal-python-sdk)
+- **GitHub**: [github.com/erickblema/pesapal-python-sdk](https://github.com/erickblema/pesapal-python-sdk)
+- **Issues**: [GitHub Issues](https://github.com/erickblema/pesapal-python-sdk/issues)
+
+## 📄 License
+
+MIT License - See [LICENSE](LICENSE) file
+
+## 👤 Author
+
+**Erick Lema**  
+Email: ericklema360@gmail.com
+
+---
+
+**Note**: The `app/` directory contains a FastAPI example application and is not part of the published SDK package.

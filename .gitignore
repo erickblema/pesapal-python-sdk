@@ -54,3 +54,14 @@ Thumbs.db
 
 # Project specific
 .pypirc
+
+# Test files (keep locally, don't commit)
+test_*.py
+test_*.sh
+*_test.py
+TEST_*.md
+TESTING*.md
+QUICK_TEST.md
+CODE_REVIEW.md
+PUBLISH.md
+REPO_NAME_SUGGESTIONS.md
