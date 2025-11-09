@@ -231,8 +231,34 @@ class PaymentService:
             )
             
             # Update payment status
+            # Map Pesapal status_code (0=INVALID, 1=COMPLETED, 2=FAILED, 3=REVERSED) to our status
             old_status = payment.status
-            new_status = status.status_code or payment.status
+            
+            # Convert status_code to string status
+            if status.status_code is not None:
+                # Map Pesapal status_code to string status
+                status_code_map = {
+                    0: "INVALID",
+                    1: "200",  # COMPLETED
+                    2: "FAILED",
+                    3: "REVERSED"
+                }
+                new_status = status_code_map.get(status.status_code, payment.status)
+            elif status.payment_status_description:
+                # Fallback to payment_status_description if status_code not available
+                desc = status.payment_status_description.upper()
+                if desc == "COMPLETED":
+                    new_status = "200"
+                elif desc == "FAILED":
+                    new_status = "FAILED"
+                elif desc == "INVALID":
+                    new_status = "INVALID"
+                elif desc == "REVERSED":
+                    new_status = "REVERSED"
+                else:
+                    new_status = payment.status
+            else:
+                new_status = payment.status
             
             # Update payment fields
             # Always update payment_method if provided (even if it was None before)
@@ -243,7 +269,14 @@ class PaymentService:
             payment.last_status_check = datetime.utcnow()
             payment.provider_response.update(status.model_dump())
             
-            logger.info(f"Payment status from Pesapal: payment_method={status.payment_method}, confirmation_code={status.confirmation_code}, status={new_status}")
+            logger.info(
+                f"Payment status from Pesapal: "
+                f"status_code={status.status_code} (0=INVALID, 1=COMPLETED, 2=FAILED, 3=REVERSED), "
+                f"payment_status_description={status.payment_status_description}, "
+                f"payment_method={status.payment_method}, "
+                f"confirmation_code={status.confirmation_code}, "
+                f"mapped_status={new_status}"
+            )
             
             # Add status change if status changed
             if old_status != new_status:

@@ -159,10 +159,10 @@ class Payment:
         """
         Get clear payment state based on status code and payment completion indicators.
         
-        IMPORTANT: Pesapal returns "200" when payment is submitted, NOT when completed.
-        A payment is only COMPLETED when:
-        - Status is "200" AND
-        - Has payment_method or confirmation_code (customer actually paid)
+        IMPORTANT: 
+        - Pesapal returns "200" when payment is submitted, NOT when completed
+        - A payment is only COMPLETED when it has payment_method or confirmation_code
+        - Status codes: "200" (submitted/completed), "FAILED", "INVALID", "REVERSED"
         
         Returns:
             PaymentState enum value (PENDING, PROCESSING, COMPLETED, FAILED, CANCELLED)
@@ -172,20 +172,23 @@ class Payment:
         # Check if payment is actually completed (has payment method or confirmation code)
         is_actually_completed = bool(self.payment_method or self.confirmation_code)
         
-        # Pesapal status codes
+        # Handle different status codes
         if status_code == "200":
             # "200" from Pesapal can mean:
-            # 1. Payment submitted to Pesapal (not yet paid) - should be PENDING/PROCESSING
+            # 1. Payment submitted to Pesapal (not yet paid) - should be PENDING
             # 2. Payment completed by customer (has payment_method/confirmation_code) - should be COMPLETED
             if is_actually_completed:
                 return PaymentState.COMPLETED.value
             else:
                 # Submitted but not yet paid - customer still needs to complete payment
                 return PaymentState.PENDING.value
+        elif status_code == "REVERSED":
+            # Payment was reversed
+            return PaymentState.FAILED.value
+        elif status_code in ["FAILED", "ERROR", "INVALID", "0"]:
+            return PaymentState.FAILED.value
         elif status_code in ["PENDING", "PROCESSING"]:
             return PaymentState.PROCESSING.value
-        elif status_code in ["FAILED", "ERROR", "0"]:
-            return PaymentState.FAILED.value
         elif status_code == "CANCELLED":
             return PaymentState.CANCELLED.value
         else:

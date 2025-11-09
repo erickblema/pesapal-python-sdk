@@ -55,21 +55,28 @@ class PaymentResponse(BaseModel):
 
 
 class PaymentStatus(BaseModel):
-    """Model for payment status response."""
+    """Model for payment status response from GetTransactionStatus API.
     
-    payment_method: Optional[str] = Field(None, description="Payment method used")
-    amount: Optional[Decimal] = Field(None, description="Payment amount")
-    created_date: Optional[datetime] = Field(None, description="Payment creation date")
-    confirmation_code: Optional[str] = Field(None, description="Payment confirmation code")
-    payment_status_description: Optional[str] = Field(None, description="Status description")
-    description: Optional[str] = Field(None, description="Payment description")
-    message: Optional[str] = Field(None, description="Status message")
-    payment_account: Optional[str] = Field(None, description="Payment account used")
+    According to Pesapal docs:
+    - status_code: 0=INVALID, 1=COMPLETED, 2=FAILED, 3=REVERSED
+    - payment_status_description: "INVALID", "FAILED", "COMPLETED", or "REVERSED"
+    """
+    
+    payment_method: Optional[str] = Field(None, description="Payment method used (Visa, MPESA, MTN, etc.)")
+    amount: Optional[Decimal] = Field(None, description="Amount paid by customer")
+    created_date: Optional[datetime] = Field(None, description="Date the payment was made")
+    confirmation_code: Optional[str] = Field(None, description="Confirmation code from payment provider")
+    payment_status_description: Optional[str] = Field(None, description="Status: INVALID, FAILED, COMPLETED, or REVERSED")
+    description: Optional[str] = Field(None, description="Description of payment status")
+    message: Optional[str] = Field(None, description="Message showing if transaction was processed successfully")
+    payment_account: Optional[str] = Field(None, description="Masked card number or phone number used")
     call_back_url: Optional[str] = Field(None, description="Callback URL")
-    status_code: Optional[str] = Field(None, description="Status code")
-    merchant_reference: Optional[str] = Field(None, description="Merchant reference")
-    currency: Optional[str] = Field(None, description="Currency code")
+    status_code: Optional[int] = Field(None, description="Pesapal status code: 0=INVALID, 1=COMPLETED, 2=FAILED, 3=REVERSED")
+    merchant_reference: Optional[str] = Field(None, description="Merchant reference (order_id)")
+    currency: Optional[str] = Field(None, description="Currency code (ISO)")
     order_tracking_id: Optional[str] = Field(None, description="Order tracking ID")
+    error: Optional[dict] = Field(None, description="Error object with error_type, code, message, call_back_url")
+    status: Optional[str] = Field(None, description="HTTP status code (200 = successful request)")
 
 
 class IPNRegistration(BaseModel):

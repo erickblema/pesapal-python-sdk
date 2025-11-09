@@ -386,14 +386,19 @@ class PesapalClient:
         logger.debug(f"Raw Pesapal status response: {response_data}")
         
         # Map field names (Pesapal may return camelCase or snake_case)
-        # Handle payment_method field variations
+        # Handle all field variations according to Pesapal documentation
         field_mapping = {
-            "payment_method": ["payment_method", "paymentMethod", "PaymentMethod", "payment_method_used", "PaymentMethodUsed"],
-            "payment_status_description": ["payment_status_description", "paymentStatusDescription", "PaymentStatusDescription", "status_description"],
-            "confirmation_code": ["confirmation_code", "confirmationCode", "ConfirmationCode", "transaction_code"],
-            "status_code": ["status_code", "statusCode", "StatusCode", "payment_status_code"],
+            "payment_method": ["payment_method", "paymentMethod", "PaymentMethod"],
+            "payment_status_description": ["payment_status_description", "paymentStatusDescription", "PaymentStatusDescription"],
+            "confirmation_code": ["confirmation_code", "confirmationCode", "ConfirmationCode"],
+            "status_code": ["status_code", "statusCode", "StatusCode"],  # Integer: 0=INVALID, 1=COMPLETED, 2=FAILED, 3=REVERSED
             "order_tracking_id": ["order_tracking_id", "orderTrackingId", "OrderTrackingId"],
             "merchant_reference": ["merchant_reference", "merchantReference", "MerchantReference"],
+            "payment_account": ["payment_account", "paymentAccount", "PaymentAccount"],
+            "call_back_url": ["call_back_url", "callBackUrl", "CallBackUrl", "callback_url"],
+            "created_date": ["created_date", "createdDate", "CreatedDate"],
+            "error": ["error", "Error"],  # Error object
+            "status": ["status", "Status"],  # HTTP status
         }
         
         mapped_response = {}
