@@ -524,11 +524,17 @@ class PesapalClient:
         logger.info("Fetching registered IPN URLs...")
         
         try:
-            response_data = await self._request("POST", ENDPOINT_IPN_LIST, include_auth=True)
+            response_data = await self._request("GET", ENDPOINT_IPN_LIST, include_auth=True)
         except PesapalAPIError as e:
-            if "404" in str(e) or "method not allowed" in str(e).lower():
+            if "404" in str(e) or "method not allowed" in str(e).lower() or "does not support" in str(e).lower():
                 logger.info("GET method failed, trying POST for IPN list...")
-                response_data = await self._request("POST", ENDPOINT_IPN_LIST, include_auth=True)
+                try:
+                    response_data = await self._request("POST", ENDPOINT_IPN_LIST, include_auth=True)
+                except PesapalAPIError:
+                    raise PesapalAPIError(
+                        f"Failed to fetch IPN list: Both GET and POST methods failed. Original error: {str(e)}",
+                        response_data=None
+                    )
             else:
                 raise
         
