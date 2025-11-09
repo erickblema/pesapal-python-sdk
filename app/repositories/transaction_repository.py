@@ -46,6 +46,7 @@ class TransactionRepository:
         transaction_id: ObjectId,
         status: str,
         confirmation_code: Optional[str] = None,
+        payment_method: Optional[str] = None,
         processed_at: Optional[datetime] = None
     ) -> Optional[Transaction]:
         """Update transaction status."""
@@ -56,6 +57,8 @@ class TransactionRepository:
         
         if confirmation_code:
             update_data["confirmation_code"] = confirmation_code
+        if payment_method:
+            update_data["payment_method"] = payment_method
         if processed_at:
             update_data["processed_at"] = processed_at
         

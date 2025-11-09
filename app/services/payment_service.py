@@ -253,10 +253,15 @@ class PaymentService:
             new_status = status.status_code or payment.status
             
             # Update payment fields
-            payment.payment_method = status.payment_method
-            payment.confirmation_code = status.confirmation_code
+            # Always update payment_method if provided (even if it was None before)
+            if status.payment_method:
+                payment.payment_method = status.payment_method
+            if status.confirmation_code:
+                payment.confirmation_code = status.confirmation_code
             payment.last_status_check = datetime.utcnow()
             payment.provider_response.update(status.model_dump())
+            
+            logger.info(f"Payment status from Pesapal: payment_method={status.payment_method}, confirmation_code={status.confirmation_code}, status={new_status}")
             
             # Add status change if status changed
             if old_status != new_status:
@@ -299,31 +304,37 @@ class PaymentService:
                 await self.transaction_repository.update_status(
                     main_transaction._id,
                     transaction_status,
-                    status.confirmation_code,
-                    datetime.utcnow() if new_status == "200" else None
+                    confirmation_code=status.confirmation_code,
+                    payment_method=status.payment_method,  # Update payment_method on transaction
+                    processed_at=datetime.utcnow() if new_status == "200" else None
                 )
             
+            # Always update payment_method if provided (even if None, to ensure it's saved)
             updated = await self.repository.update_status(
                 order_id,
                 new_status,
-                status.payment_method,
+                status.payment_method,  # This will be None if not provided, but that's okay
                 status.confirmation_code,
                 event=event
             )
             
-            # Update status history and other fields
+            # Update status history and other fields (including payment_method even if None)
             if updated:
+                update_fields = {
+                    "last_status_check": payment.last_status_check,
+                    "provider_response": payment.provider_response,
+                    "status_history": payment.status_history
+                }
+                
+                # Always update payment_method (even if None, to clear old values)
+                if status.payment_method is not None:
+                    update_fields["payment_method"] = status.payment_method
+                if status.confirmation_code is not None:
+                    update_fields["confirmation_code"] = status.confirmation_code
+                
                 await self.repository.collection.update_one(
                     {"order_id": order_id},
-                    {
-                        "$set": {
-                            "payment_method": payment.payment_method,
-                            "confirmation_code": payment.confirmation_code,
-                            "last_status_check": payment.last_status_check,
-                            "provider_response": payment.provider_response,
-                            "status_history": payment.status_history
-                        }
-                    }
+                    {"$set": update_fields}
                 )
             
             logger.info(f"Payment status checked: order_id={order_id}, status={old_status} -> {new_status}")

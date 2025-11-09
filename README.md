@@ -1,8 +1,8 @@
-# SDK Payments API
+# Pesapal Payment SDK
 
-A FastAPI-based payment processing SDK API with Alembic migrations and Neon Postgres database.
+FastAPI-based payment integration with Pesapal API 3.0, featuring complete transaction tracking and webhook handling.
 
-## Setup
+## Quick Start
 
 ### 1. Install Dependencies
 
@@ -10,130 +10,250 @@ A FastAPI-based payment processing SDK API with Alembic migrations and Neon Post
 pip install -r requirements.txt
 ```
 
-### 2. Configure Database
+### 2. Environment Setup
 
-Create a `.env` file in the root directory:
-
-```bash
-cp .env.example .env
-```
-
-Edit `.env` and add your Neon Postgres connection string:
+Create a `.env` file in the project root:
 
 ```env
-DATABASE_URL=postgresql://user:password@ep-xxx-xxx.region.aws.neon.tech/dbname?sslmode=require
+# MongoDB Configuration
+MONGODB_URL=mongodb+srv://username:password@cluster.mongodb.net/?appName=Cluster0
+MONGODB_DB_NAME=sdk_payments
+
+# Pesapal API 3.0 Configuration
+PESAPAL_CONSUMER_KEY=your_consumer_key_here
+PESAPAL_CONSUMER_SECRET=your_consumer_secret_here
+PESAPAL_SANDBOX=true
+PESAPAL_CALLBACK_URL=https://your-domain.com/payments/callback
+PESAPAL_IPN_URL=https://your-domain.com/webhooks/pesapal
+PESAPAL_IPN_ID=your_ipn_notification_id_here
 ```
 
-**For Neon Postgres:**
-- Get your connection string from the Neon dashboard
-- Format: `postgresql://username:password@host/database?sslmode=require`
-- Neon automatically provides SSL, so include `?sslmode=require`
+### 3. Get Pesapal Credentials
 
-### 3. Initialize Alembic (First Time)
+1. **Consumer Key & Secret:**
+   - Log into Pesapal merchant dashboard
+   - Go to Settings → API Credentials
+   - Copy Consumer Key and Consumer Secret
 
-Alembic is already configured. To create your first migration:
+2. **IPN Notification ID:**
+   - Go to Settings → IPN (Instant Payment Notification)
+   - Register your IPN URL: `https://your-domain.com/webhooks/pesapal`
+   - Copy the IPN Notification ID
+   - Add to `.env` as `PESAPAL_IPN_ID`
 
-```bash
-alembic revision --autogenerate -m "Initial migration"
-alembic upgrade head
-```
+**Note:** IPN_ID is required for Pesapal API 3.0. For local testing, use ngrok to expose your server.
 
-## Running the Application
+### 4. Run the Application
 
 ```bash
 uvicorn main:app --reload
 ```
 
-Or using FastAPI CLI:
+Access Swagger UI at: `http://localhost:8000/docs`
 
-```bash
-fastapi dev main.py
+## API Endpoints
+
+### Payment Endpoints
+
+- **POST `/payments/`** - Create payment
+  ```json
+  {
+    "order_id": "ORDER-123",
+    "amount": 1000,
+    "currency": "TZS",
+    "description": "Payment description",
+    "billing_address": {
+      "email_address": "customer@example.com",
+      "phone_number": "+255123456789",
+      "country_code": "TZ",
+      "first_name": "John",
+      "middle_name": "",
+      "last_name": "Doe",
+      "line_1": "Street Address",
+      "line_2": "",
+      "city": "Dar es Salaam",
+      "state": "",
+      "postal_code": "",
+      "zip_code": ""
+    }
+  }
+  ```
+
+- **GET `/payments/callback`** - Payment callback handler (called by Pesapal after payment)
+  - Automatically fetches payment status
+  - Returns complete payment data with transaction history
+
+- **GET `/payments/{order_id}`** - Get payment details
+  - Returns payment info, status history, event history
+  - Add `?include_transactions=true` to include transaction history
+
+- **GET `/payments/{order_id}/status`** - Check payment status
+  - Fetches latest status from Pesapal
+  - Updates transaction records
+
+- **GET `/payments/{order_id}/transactions`** - Get transaction history
+  - Returns all transactions for a payment
+
+- **GET `/payments/status/transaction?orderTrackingId={id}`** - Get status by tracking ID
+
+- **GET `/payments/`** - List payments (with optional status filter)
+
+### Webhook Endpoints
+
+- **POST `/webhooks/pesapal`** - IPN webhook handler
+  - Receives payment notifications from Pesapal
+  - Automatically fetches payment status
+  - Returns IPN response format
+
+## Database Structure
+
+### Payments Collection
+
+Stores main payment records with:
+- Payment details (amount, currency, status)
+- Tracking information (order_tracking_id, redirect_url)
+- Status history (all status changes with timestamps)
+- Event history (all payment events)
+- Callback/webhook tracking (flags and timestamps)
+- Provider responses (full Pesapal API responses)
+
+### Transactions Collection
+
+Stores individual transaction records:
+- Transaction type (PAYMENT, REFUND, CHARGEBACK, etc.)
+- Amount, fees, net amount
+- Status (PENDING, PROCESSING, COMPLETED, etc.)
+- Processing timestamps
+- Links to payment via `payment_id`
+
+### Status History
+
+Every status change is tracked:
+```json
+{
+  "old_status": "PENDING",
+  "new_status": "200",
+  "source": "CALLBACK",
+  "reason": "Payment completed",
+  "timestamp": "2025-11-09T02:10:00Z"
+}
 ```
 
-Access the API:
-- API: http://127.0.0.1:8000
-- Swagger UI: http://127.0.0.1:8000/docs
-- ReDoc: http://127.0.0.1:8000/redoc
+### Event History
 
-## Database Migrations with Alembic
+All events are tracked:
+- `CREATED` - Payment created
+- `SUBMITTED_TO_PESAPAL` - Submitted to Pesapal
+- `CALLBACK_RECEIVED` - Callback received
+- `WEBHOOK_RECEIVED` - Webhook received
+- `STATUS_CHECKED` - Status checked from Pesapal
+- `STATUS_UPDATED_VIA_WEBHOOK` - Status updated via webhook
 
-### Create a New Migration
+## Example Payment Flow
 
-```bash
-alembic revision --autogenerate -m "Description of changes"
+1. **Create Payment:**
+   ```bash
+   POST /payments/
+   ```
+   - Creates payment record
+   - Creates transaction record
+   - Returns redirect URL for customer
+
+2. **Customer Completes Payment:**
+   - Customer redirected to Pesapal
+   - Completes payment
+   - Pesapal redirects to callback URL
+
+3. **Callback Received:**
+   ```bash
+   GET /payments/callback?OrderTrackingId=xxx&OrderMerchantReference=ORDER-123
+   ```
+   - Updates callback flags
+   - Fetches fresh status from Pesapal
+   - Updates transaction status
+   - Returns complete payment data
+
+4. **Webhook Received:**
+   ```bash
+   POST /webhooks/pesapal
+   ```
+   - Receives IPN notification
+   - Fetches payment status
+   - Updates payment and transaction records
+   - Returns IPN response
+
+## Response Format
+
+### Payment Response
+```json
+{
+  "_id": "690fb56aba1b44e85870105f",
+  "order_id": "ORDER-123",
+  "amount": "1000",
+  "currency": "TZS",
+  "status": "200",
+  "OrderTrackingId": "09369ec3-04a2-4eca-8b8c-db1c25b29552",
+  "redirect_url": "https://cybqa.pesapal.com/pesapaliframe/...",
+  "payment_method": "Visa",
+  "confirmation_code": "ABC123",
+  "created_at": "2025-11-09T02:09:00Z",
+  "updated_at": "2025-11-09T02:10:00Z"
+}
 ```
 
-### Apply Migrations
-
-```bash
-alembic upgrade head
+### Callback Response
+```json
+{
+  "message": "Payment callback received",
+  "payment": { /* complete payment details */ },
+  "status_history": [ /* all status changes */ ],
+  "transactions": [ /* all transactions */ ],
+  "events": [ /* all events */ ]
+}
 ```
 
-### Rollback Migration
+## Development
 
-```bash
-alembic downgrade -1
-```
-
-### View Migration History
-
-```bash
-alembic history
-```
-
-### View Current Revision
-
-```bash
-alembic current
-```
-
-## Project Structure
+### Project Structure
 
 ```
-sdk-payments/
-├── alembic/              # Alembic migration files
-│   ├── versions/         # Migration versions
-│   ├── env.py           # Alembic environment config
-│   └── script.py.mako   # Migration template
-├── app/                  # Application code
-│   ├── __init__.py
-│   ├── database.py      # Database connection and session
-│   └── main.py          # (if you move routes here)
-├── main.py              # FastAPI application entry point
-├── alembic.ini           # Alembic configuration
-├── requirements.txt     # Python dependencies
-└── .env                 # Environment variables (not in git)
+.
+├── main.py                 # FastAPI application entry point
+├── app/
+│   ├── config/            # Configuration settings
+│   ├── database/          # MongoDB connection
+│   ├── models/            # Data models (Payment, Transaction)
+│   ├── repositories/      # Database operations
+│   ├── routers/           # API routes
+│   ├── schema/            # Pydantic schemas
+│   └── services/          # Business logic
+├── pesapal/               # Pesapal API client
+└── requirements.txt       # Python dependencies
 ```
 
-## Database Connection
+### Key Features
 
-The database connection is configured in `app/database.py`:
-- Uses async SQLAlchemy with asyncpg
-- Connection string from `DATABASE_URL` environment variable
-- Session management with dependency injection
-
-## Using Database in Routes
-
-```python
-from fastapi import Depends
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.database import get_db
-
-@app.get("/items")
-async def get_items(db: AsyncSession = Depends(get_db)):
-    # Use db session here
-    return {"items": []}
-```
+- Complete transaction tracking
+- Status history with timestamps
+- Event logging
+- Callback and webhook handling
+- Automatic status synchronization
+- Transaction reconciliation support
 
 ## Testing
 
+Use Swagger UI at `/docs` to test endpoints. For webhook testing, use ngrok to expose your local server:
+
 ```bash
-pytest
+ngrok http 8000
 ```
+
+Then use the ngrok URL for your IPN URL in Pesapal dashboard.
 
 ## Notes
 
-- The database connection uses async SQLAlchemy for better performance
-- Alembic automatically converts `postgresql://` to `postgresql+asyncpg://` for async support
-- Always use migrations in production, never `Base.metadata.create_all()`
-
+- IPN_ID is required for Pesapal API 3.0
+- IPN URL must be publicly accessible
+- Sandbox and Production use different credentials
+- All timestamps are in UTC
+- Status codes: "200" = completed, "PENDING" = pending, etc.

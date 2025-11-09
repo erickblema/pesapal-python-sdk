@@ -381,8 +381,42 @@ class PesapalClient:
         # Make API request
         response_data = await self._request("GET", ENDPOINT_GET_STATUS, params=params, custom_headers=headers)
         
+        # Log raw response for debugging
+        logger.info(f"Raw Pesapal status response keys: {list(response_data.keys())}")
+        logger.debug(f"Raw Pesapal status response: {response_data}")
+        
+        # Map field names (Pesapal may return camelCase or snake_case)
+        # Handle payment_method field variations
+        field_mapping = {
+            "payment_method": ["payment_method", "paymentMethod", "PaymentMethod", "payment_method_used", "PaymentMethodUsed"],
+            "payment_status_description": ["payment_status_description", "paymentStatusDescription", "PaymentStatusDescription", "status_description"],
+            "confirmation_code": ["confirmation_code", "confirmationCode", "ConfirmationCode", "transaction_code"],
+            "status_code": ["status_code", "statusCode", "StatusCode", "payment_status_code"],
+            "order_tracking_id": ["order_tracking_id", "orderTrackingId", "OrderTrackingId"],
+            "merchant_reference": ["merchant_reference", "merchantReference", "MerchantReference"],
+        }
+        
+        mapped_response = {}
+        for our_field, possible_fields in field_mapping.items():
+            for field in possible_fields:
+                if field in response_data:
+                    mapped_response[our_field] = response_data[field]
+                    logger.debug(f"Mapped {field} -> {our_field}: {response_data[field]}")
+                    break
+        
+        # Copy all other fields as-is
+        for key, value in response_data.items():
+            if key not in mapped_response:
+                mapped_response[key] = value
+        
+        # Log payment_method extraction
+        if "payment_method" in mapped_response:
+            logger.info(f"Payment method extracted: {mapped_response['payment_method']}")
+        else:
+            logger.warning(f"Payment method not found in response. Available fields: {list(response_data.keys())}")
+        
         # Parse response
-        return PaymentStatus(**response_data)
+        return PaymentStatus(**mapped_response)
     
     async def initiate_payment(
         self,
