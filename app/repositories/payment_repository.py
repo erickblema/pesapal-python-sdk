@@ -108,12 +108,22 @@ class PaymentRepository:
         self,
         skip: int = 0,
         limit: int = 100,
-        status: Optional[str] = None
+        status: Optional[str] = None,
+        payment_state: Optional[str] = None
     ) -> List[Payment]:
         """List payments with optional filtering."""
         query = {}
-        if status:
-            query["status"] = status
+        # Support filtering by payment_state (preferred) or status (backward compatibility)
+        if payment_state:
+            query["payment_state"] = payment_state.upper()
+        elif status:
+            # If status is a payment_state value, filter by payment_state
+            status_upper = status.upper()
+            if status_upper in ["PENDING", "PROCESSING", "COMPLETED", "FAILED", "CANCELLED"]:
+                query["payment_state"] = status_upper
+            else:
+                # Otherwise, filter by status field (for backward compatibility)
+                query["status"] = status
         
         cursor = self.collection.find(query).skip(skip).limit(limit).sort("created_at", -1)
         docs = await cursor.to_list(length=limit)

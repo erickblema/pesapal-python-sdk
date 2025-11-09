@@ -1067,3 +1067,265 @@ ValueError: Invalid webhook data: missing OrderTrackingId or OrderMerchantRefere
 2025-11-09 17:34:08 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
 2025-11-09 17:34:08 - pesapal.client - INFO - Submitting payment order: TX-testing3 - 1000.0 TZS
 2025-11-09 17:34:09 - app.services.payment_service - INFO - Payment initiated successfully: order_id=TX-testing3, tracking_id=4dabc4c9-6475-43e7-8a78-db1c25315042
+2025-11-09 17:41:20 - main - INFO - Shutting down application...
+2025-11-09 17:41:20 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 17:41:20 - main - INFO - Application shut down
+2025-11-09 17:41:21 - main - INFO - Starting application...
+2025-11-09 17:41:22 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 17:41:22 - main - INFO - Application started successfully
+2025-11-09 17:41:40 - main - INFO - Shutting down application...
+2025-11-09 17:41:41 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 17:41:41 - main - INFO - Application shut down
+2025-11-09 17:41:41 - main - INFO - Starting application...
+2025-11-09 17:41:43 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 17:41:43 - main - INFO - Application started successfully
+2025-11-09 17:41:43 - main - INFO - Starting application...
+2025-11-09 17:41:45 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 17:41:45 - main - INFO - Application started successfully
+2025-11-09 17:41:50 - main - INFO - Shutting down application...
+2025-11-09 17:41:50 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 17:41:50 - main - INFO - Application shut down
+2025-11-09 17:41:50 - main - INFO - Starting application...
+2025-11-09 17:41:52 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 17:41:52 - main - INFO - Application started successfully
+2025-11-09 17:44:58 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
+2025-11-09 17:44:58 - pesapal.client - INFO - Submitting payment order: TX-testing4 - 2000.0 KES
+2025-11-09 17:44:58 - app.services.payment_service - INFO - Payment initiated successfully: order_id=TX-testing4, tracking_id=987d115b-c962-48cc-add7-db1c33532d24
+2025-11-09 17:48:07 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
+2025-11-09 17:48:07 - pesapal.client - INFO - Submitting payment order: TX-testing5 - 2000.0 TZS
+2025-11-09 17:48:07 - app.services.payment_service - INFO - Payment initiated successfully: order_id=TX-testing5, tracking_id=ac70fcfa-62ef-4d7b-96ee-db1c2d3719bd
+2025-11-09 17:56:57 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
+2025-11-09 17:56:57 - pesapal.client - INFO - Raw Pesapal status response keys: ['payment_method', 'amount', 'created_date', 'confirmation_code', 'order_tracking_id', 'payment_status_description', 'description', 'message', 'payment_account', 'call_back_url', 'status_code', 'merchant_reference', 'account_number', 'payment_status_code', 'currency', 'error', 'status']
+2025-11-09 17:56:57 - pesapal.client - INFO - Payment method extracted: MasterCard
+2025-11-09 17:56:57 - app.services.payment_service - INFO - Payment status from Pesapal: status_code=1 (0=INVALID, 1=COMPLETED, 2=FAILED, 3=REVERSED), payment_status_description=Completed, payment_method=MasterCard, confirmation_code=7626999206576973904606, mapped_status=200
+2025-11-09 17:56:58 - app.services.payment_service - ERROR - Unexpected error checking payment status for order TX-testing5: Invalid document {'q': {'order_id': 'TX-testing5'}, 'u': {'$set': {'last_status_check': datetime.datetime(2025, 11, 9, 14, 56, 57, 838757), 'provider_response': {'order_tracking_id': 'ac70fcfa-62ef-4d7b-96ee-db1c2d3719bd', 'merchant_reference': 'TX-testing5', 'redirect_url': 'https://cybqa.pesapal.com/pesapaliframe/PesapalIframe3/Index?OrderTrackingId=ac70fcfa-62ef-4d7b-96ee-db1c2d3719bd', 'status': '200', 'error': {'error_type': None, 'code': None, 'message': None}, 'message': 'Request processed successfully', 'payment_method': 'MasterCard', 'amount': Decimal('0.4'), 'created_date': datetime.datetime(2025, 11, 9, 17, 52, 2, 210000), 'confirmation_code': '7626999206576973904606', 'payment_status_description': 'Completed', 'description': 'Transaction successfully processed.', 'payment_account': '520000XXXXXX0007', 'call_back_url': 'https://payment-helper.onrender.com/payments/callback?OrderTrackingId=ac70fcfa-62ef-4d7b-96ee-db1c2d3719bd&OrderMerchantReference=TX-testing5', 'status_code': 1, 'currency': 'USD'}, 'status_history': [{'old_status': 'PENDING', 'new_status': '200', 'source': 'CREATION', 'reason': 'Submitted to Pesapal', 'metadata': {'order_tracking_id': 'ac70fcfa-62ef-4d7b-96ee-db1c2d3719bd', 'redirect_url': 'https://cybqa.pesapal.com/pesapaliframe/PesapalIframe3/Index?OrderTrackingId=ac70fcfa-62ef-4d7b-96ee-db1c2d3719bd', 'pesapal_status': '200'}, 'timestamp': datetime.datetime(2025, 11, 9, 14, 48, 7, 725000)}], 'status': '200', 'payment_state': 'COMPLETED', 'payment_method': 'MasterCard', 'confirmation_code': '7626999206576973904606'}}, 'multi': False, 'upsert': False} | cannot encode object: Decimal('0.4'), of type: <class 'decimal.Decimal'>
+Traceback (most recent call last):
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/app/services/payment_service.py", line 347, in check_payment_status
+    result = await self.repository.collection.update_one(
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/concurrent/futures/thread.py", line 52, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/collection.py", line 1336, in update_one
+    self._update_retryable(
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/collection.py", line 1118, in _update_retryable
+    return self._database.client._retryable_write(
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/mongo_client.py", line 2082, in _retryable_write
+    return self._retry_with_session(retryable, func, s, bulk, operation, operation_id)
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/mongo_client.py", line 1968, in _retry_with_session
+    return self._retry_internal(
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/_csot.py", line 125, in csot_wrapper
+    return func(self, *args, **kwargs)
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/mongo_client.py", line 2003, in _retry_internal
+    return _ClientConnectionRetryable(
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/mongo_client.py", line 2765, in run
+    return self._read() if self._is_read else self._write()
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/mongo_client.py", line 2897, in _write
+    return self._func(self._session, conn, self._retryable)  # type: ignore
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/collection.py", line 1098, in _update
+    return self._update(
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/collection.py", line 1049, in _update
+    conn.command(
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/helpers.py", line 47, in inner
+    return func(*args, **kwargs)
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/pool.py", line 441, in command
+    self._raise_connection_failure(error)
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/pool.py", line 413, in command
+    return command(
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/network.py", line 148, in command
+    request_id, msg, size, max_doc_size = message._op_msg(
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/message.py", line 419, in _op_msg
+    return _op_msg_uncompressed(flags, command, identifier, docs, opts)
+bson.errors.InvalidDocument: Invalid document {'q': {'order_id': 'TX-testing5'}, 'u': {'$set': {'last_status_check': datetime.datetime(2025, 11, 9, 14, 56, 57, 838757), 'provider_response': {'order_tracking_id': 'ac70fcfa-62ef-4d7b-96ee-db1c2d3719bd', 'merchant_reference': 'TX-testing5', 'redirect_url': 'https://cybqa.pesapal.com/pesapaliframe/PesapalIframe3/Index?OrderTrackingId=ac70fcfa-62ef-4d7b-96ee-db1c2d3719bd', 'status': '200', 'error': {'error_type': None, 'code': None, 'message': None}, 'message': 'Request processed successfully', 'payment_method': 'MasterCard', 'amount': Decimal('0.4'), 'created_date': datetime.datetime(2025, 11, 9, 17, 52, 2, 210000), 'confirmation_code': '7626999206576973904606', 'payment_status_description': 'Completed', 'description': 'Transaction successfully processed.', 'payment_account': '520000XXXXXX0007', 'call_back_url': 'https://payment-helper.onrender.com/payments/callback?OrderTrackingId=ac70fcfa-62ef-4d7b-96ee-db1c2d3719bd&OrderMerchantReference=TX-testing5', 'status_code': 1, 'currency': 'USD'}, 'status_history': [{'old_status': 'PENDING', 'new_status': '200', 'source': 'CREATION', 'reason': 'Submitted to Pesapal', 'metadata': {'order_tracking_id': 'ac70fcfa-62ef-4d7b-96ee-db1c2d3719bd', 'redirect_url': 'https://cybqa.pesapal.com/pesapaliframe/PesapalIframe3/Index?OrderTrackingId=ac70fcfa-62ef-4d7b-96ee-db1c2d3719bd', 'pesapal_status': '200'}, 'timestamp': datetime.datetime(2025, 11, 9, 14, 48, 7, 725000)}], 'status': '200', 'payment_state': 'COMPLETED', 'payment_method': 'MasterCard', 'confirmation_code': '7626999206576973904606'}}, 'multi': False, 'upsert': False} | cannot encode object: Decimal('0.4'), of type: <class 'decimal.Decimal'>
+2025-11-09 17:58:20 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
+2025-11-09 17:58:21 - pesapal.client - INFO - Raw Pesapal status response keys: ['payment_method', 'amount', 'created_date', 'confirmation_code', 'order_tracking_id', 'payment_status_description', 'description', 'message', 'payment_account', 'call_back_url', 'status_code', 'merchant_reference', 'account_number', 'payment_status_code', 'currency', 'error', 'status']
+2025-11-09 17:58:21 - pesapal.client - INFO - Payment method extracted: MasterCard
+2025-11-09 17:58:21 - app.services.payment_service - INFO - Payment status from Pesapal: status_code=1 (0=INVALID, 1=COMPLETED, 2=FAILED, 3=REVERSED), payment_status_description=Completed, payment_method=MasterCard, confirmation_code=7626999206576973904606, mapped_status=200
+2025-11-09 17:58:21 - app.services.payment_service - ERROR - Unexpected error checking payment status for order TX-testing5: Invalid document {'q': {'order_id': 'TX-testing5'}, 'u': {'$set': {'last_status_check': datetime.datetime(2025, 11, 9, 14, 58, 21, 325104), 'provider_response': {'order_tracking_id': 'ac70fcfa-62ef-4d7b-96ee-db1c2d3719bd', 'merchant_reference': 'TX-testing5', 'redirect_url': 'https://cybqa.pesapal.com/pesapaliframe/PesapalIframe3/Index?OrderTrackingId=ac70fcfa-62ef-4d7b-96ee-db1c2d3719bd', 'status': '200', 'error': {'error_type': None, 'code': None, 'message': None}, 'message': 'Request processed successfully', 'payment_method': 'MasterCard', 'amount': Decimal('0.4'), 'created_date': datetime.datetime(2025, 11, 9, 17, 52, 2, 210000), 'confirmation_code': '7626999206576973904606', 'payment_status_description': 'Completed', 'description': 'Transaction successfully processed.', 'payment_account': '520000XXXXXX0007', 'call_back_url': 'https://payment-helper.onrender.com/payments/callback?OrderTrackingId=ac70fcfa-62ef-4d7b-96ee-db1c2d3719bd&OrderMerchantReference=TX-testing5', 'status_code': 1, 'currency': 'USD'}, 'status_history': [{'old_status': 'PENDING', 'new_status': '200', 'source': 'CREATION', 'reason': 'Submitted to Pesapal', 'metadata': {'order_tracking_id': 'ac70fcfa-62ef-4d7b-96ee-db1c2d3719bd', 'redirect_url': 'https://cybqa.pesapal.com/pesapaliframe/PesapalIframe3/Index?OrderTrackingId=ac70fcfa-62ef-4d7b-96ee-db1c2d3719bd', 'pesapal_status': '200'}, 'timestamp': datetime.datetime(2025, 11, 9, 14, 48, 7, 725000)}], 'status': '200', 'payment_state': 'COMPLETED', 'payment_method': 'MasterCard', 'confirmation_code': '7626999206576973904606'}}, 'multi': False, 'upsert': False} | cannot encode object: Decimal('0.4'), of type: <class 'decimal.Decimal'>
+Traceback (most recent call last):
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/app/services/payment_service.py", line 347, in check_payment_status
+    result = await self.repository.collection.update_one(
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/concurrent/futures/thread.py", line 52, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/collection.py", line 1336, in update_one
+    self._update_retryable(
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/collection.py", line 1118, in _update_retryable
+    return self._database.client._retryable_write(
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/mongo_client.py", line 2082, in _retryable_write
+    return self._retry_with_session(retryable, func, s, bulk, operation, operation_id)
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/mongo_client.py", line 1968, in _retry_with_session
+    return self._retry_internal(
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/_csot.py", line 125, in csot_wrapper
+    return func(self, *args, **kwargs)
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/mongo_client.py", line 2003, in _retry_internal
+    return _ClientConnectionRetryable(
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/mongo_client.py", line 2765, in run
+    return self._read() if self._is_read else self._write()
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/mongo_client.py", line 2897, in _write
+    return self._func(self._session, conn, self._retryable)  # type: ignore
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/collection.py", line 1098, in _update
+    return self._update(
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/collection.py", line 1049, in _update
+    conn.command(
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/helpers.py", line 47, in inner
+    return func(*args, **kwargs)
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/pool.py", line 441, in command
+    self._raise_connection_failure(error)
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/pool.py", line 413, in command
+    return command(
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/network.py", line 148, in command
+    request_id, msg, size, max_doc_size = message._op_msg(
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/message.py", line 419, in _op_msg
+    return _op_msg_uncompressed(flags, command, identifier, docs, opts)
+bson.errors.InvalidDocument: Invalid document {'q': {'order_id': 'TX-testing5'}, 'u': {'$set': {'last_status_check': datetime.datetime(2025, 11, 9, 14, 58, 21, 325104), 'provider_response': {'order_tracking_id': 'ac70fcfa-62ef-4d7b-96ee-db1c2d3719bd', 'merchant_reference': 'TX-testing5', 'redirect_url': 'https://cybqa.pesapal.com/pesapaliframe/PesapalIframe3/Index?OrderTrackingId=ac70fcfa-62ef-4d7b-96ee-db1c2d3719bd', 'status': '200', 'error': {'error_type': None, 'code': None, 'message': None}, 'message': 'Request processed successfully', 'payment_method': 'MasterCard', 'amount': Decimal('0.4'), 'created_date': datetime.datetime(2025, 11, 9, 17, 52, 2, 210000), 'confirmation_code': '7626999206576973904606', 'payment_status_description': 'Completed', 'description': 'Transaction successfully processed.', 'payment_account': '520000XXXXXX0007', 'call_back_url': 'https://payment-helper.onrender.com/payments/callback?OrderTrackingId=ac70fcfa-62ef-4d7b-96ee-db1c2d3719bd&OrderMerchantReference=TX-testing5', 'status_code': 1, 'currency': 'USD'}, 'status_history': [{'old_status': 'PENDING', 'new_status': '200', 'source': 'CREATION', 'reason': 'Submitted to Pesapal', 'metadata': {'order_tracking_id': 'ac70fcfa-62ef-4d7b-96ee-db1c2d3719bd', 'redirect_url': 'https://cybqa.pesapal.com/pesapaliframe/PesapalIframe3/Index?OrderTrackingId=ac70fcfa-62ef-4d7b-96ee-db1c2d3719bd', 'pesapal_status': '200'}, 'timestamp': datetime.datetime(2025, 11, 9, 14, 48, 7, 725000)}], 'status': '200', 'payment_state': 'COMPLETED', 'payment_method': 'MasterCard', 'confirmation_code': '7626999206576973904606'}}, 'multi': False, 'upsert': False} | cannot encode object: Decimal('0.4'), of type: <class 'decimal.Decimal'>
+2025-11-09 18:03:38 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
+2025-11-09 18:03:38 - pesapal.client - INFO - Requesting refund for order: ac70fcfa-62ef-4d7b-96ee-db1c2d3719bd
+2025-11-09 18:03:39 - app.routers.payments - ERROR - Error processing refund: No HTTP resource was found that matches the request URI 'https://cybqa.pesapal.com/pesapalv3/api/Transactions/RefundOrder'.
+Traceback (most recent call last):
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/app/routers/payments.py", line 651, in refund_payment
+    result = await client.refund_order(
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/pesapal/client.py", line 671, in refund_order
+    response_data = await self._request("POST", ENDPOINT_REFUND, data=request_data, include_auth=True)
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/pesapal/client.py", line 243, in _request
+    raise PesapalAPIError(
+pesapal.exceptions.PesapalAPIError: No HTTP resource was found that matches the request URI 'https://cybqa.pesapal.com/pesapalv3/api/Transactions/RefundOrder'.
+2025-11-09 18:04:00 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
+2025-11-09 18:04:00 - pesapal.client - INFO - Requesting refund for order: ac70fcfa-62ef-4d7b-96ee-db1c2d3719bd
+2025-11-09 18:04:00 - app.routers.payments - ERROR - Error processing refund: No HTTP resource was found that matches the request URI 'https://cybqa.pesapal.com/pesapalv3/api/Transactions/RefundOrder'.
+Traceback (most recent call last):
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/app/routers/payments.py", line 651, in refund_payment
+    result = await client.refund_order(
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/pesapal/client.py", line 671, in refund_order
+    response_data = await self._request("POST", ENDPOINT_REFUND, data=request_data, include_auth=True)
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/pesapal/client.py", line 243, in _request
+    raise PesapalAPIError(
+pesapal.exceptions.PesapalAPIError: No HTTP resource was found that matches the request URI 'https://cybqa.pesapal.com/pesapalv3/api/Transactions/RefundOrder'.
+2025-11-09 18:04:40 - main - INFO - Shutting down application...
+2025-11-09 18:04:41 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 18:04:41 - main - INFO - Application shut down
+2025-11-09 18:04:42 - main - INFO - Starting application...
+2025-11-09 18:04:43 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 18:04:43 - main - INFO - Application started successfully
+2025-11-09 18:04:49 - main - INFO - Shutting down application...
+2025-11-09 18:04:49 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 18:04:49 - main - INFO - Application shut down
+2025-11-09 18:04:49 - main - INFO - Starting application...
+2025-11-09 18:04:51 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 18:04:51 - main - INFO - Application started successfully
+2025-11-09 18:07:43 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
+2025-11-09 18:07:43 - pesapal.client - INFO - Requesting refund for order: ac70fcfa-62ef-4d7b-96ee-db1c2d3719bd
+2025-11-09 18:07:43 - pesapal.client - INFO - Refund request submitted: {'error': {'error_type': 'invalid_request_error', 'code': 'invalid_api_request_parameters', 'message': 'Invalid API request.'}, 'status': '500'}
+2025-11-09 18:08:36 - main - INFO - Shutting down application...
+2025-11-09 18:08:36 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 18:08:36 - main - INFO - Application shut down
+2025-11-09 18:08:36 - main - INFO - Starting application...
+2025-11-09 18:08:38 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 18:08:38 - main - INFO - Application started successfully
+2025-11-09 18:08:43 - main - INFO - Shutting down application...
+2025-11-09 18:08:43 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 18:08:43 - main - INFO - Application shut down
+2025-11-09 18:08:44 - main - INFO - Starting application...
+2025-11-09 18:08:46 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 18:08:46 - main - INFO - Application started successfully
+2025-11-09 18:08:53 - main - INFO - Shutting down application...
+2025-11-09 18:08:53 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 18:08:53 - main - INFO - Application shut down
+2025-11-09 18:08:54 - main - INFO - Starting application...
+2025-11-09 18:08:55 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 18:08:55 - main - INFO - Application started successfully
+2025-11-09 18:15:36 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
+2025-11-09 18:15:36 - pesapal.client - INFO - Requesting refund: confirmation_code=7626999206576973904606, amount=2000, username=john
+2025-11-09 18:15:36 - pesapal.client - INFO - Refund request submitted: {'status': '500', 'message': 'Invalid amount provided. Please check your transaction details'}
+2025-11-09 18:16:01 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
+2025-11-09 18:16:01 - pesapal.client - INFO - Requesting refund: confirmation_code=7626999206576973904606, amount=2000.00, username=john
+2025-11-09 18:16:01 - pesapal.client - INFO - Refund request submitted: {'status': '500', 'message': 'Invalid amount provided. Please check your transaction details'}
+2025-11-09 18:16:45 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
+2025-11-09 18:16:45 - pesapal.client - INFO - Requesting refund: confirmation_code=7626999206576973904606, amount=1000.00, username=john
+2025-11-09 18:16:45 - pesapal.client - INFO - Refund request submitted: {'status': '500', 'message': 'Invalid amount provided. Please check your transaction details'}
+2025-11-09 18:17:29 - main - INFO - Shutting down application...
+2025-11-09 18:17:29 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 18:17:29 - main - INFO - Application shut down
+2025-11-09 18:17:30 - main - INFO - Starting application...
+2025-11-09 18:17:31 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 18:17:31 - main - INFO - Application started successfully
+2025-11-09 18:18:20 - main - INFO - Shutting down application...
+2025-11-09 18:18:20 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 18:18:20 - main - INFO - Application shut down
+2025-11-09 18:18:21 - main - INFO - Starting application...
+2025-11-09 18:18:23 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 18:18:23 - main - INFO - Application started successfully
+2025-11-09 18:18:28 - main - INFO - Shutting down application...
+2025-11-09 18:18:28 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 18:18:28 - main - INFO - Application shut down
+2025-11-09 18:18:28 - main - INFO - Starting application...
+2025-11-09 18:18:30 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 18:18:30 - main - INFO - Application started successfully
+2025-11-09 18:18:54 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
+2025-11-09 18:18:54 - pesapal.client - INFO - Requesting refund: confirmation_code=7626999206576973904606, amount=2000, username=john
+2025-11-09 18:18:54 - pesapal.client - INFO - Refund request submitted: {'status': '500', 'message': 'Invalid amount provided. Please check your transaction details'}
+2025-11-09 18:19:42 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
+2025-11-09 18:19:42 - pesapal.client - INFO - Requesting refund: confirmation_code=7626999206576973904606, amount=2000, username=john
+2025-11-09 18:19:42 - pesapal.client - INFO - Refund request submitted: {'status': '500', 'message': 'Invalid amount provided. Please check your transaction details'}
+2025-11-09 18:20:24 - main - INFO - Shutting down application...
+2025-11-09 18:20:25 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 18:20:25 - main - INFO - Application shut down
+2025-11-09 18:20:25 - main - INFO - Starting application...
+2025-11-09 18:20:27 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 18:20:27 - main - INFO - Application started successfully
+2025-11-09 18:20:51 - main - INFO - Shutting down application...
+2025-11-09 18:20:51 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 18:20:51 - main - INFO - Application shut down
+2025-11-09 18:20:51 - main - INFO - Starting application...
+2025-11-09 18:20:53 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 18:20:53 - main - INFO - Application started successfully
+2025-11-09 18:20:56 - main - INFO - Shutting down application...
+2025-11-09 18:20:57 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 18:20:57 - main - INFO - Application shut down
+2025-11-09 18:20:57 - main - INFO - Starting application...
+2025-11-09 18:20:59 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 18:20:59 - main - INFO - Application started successfully
+2025-11-09 18:21:04 - main - INFO - Shutting down application...
+2025-11-09 18:21:05 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 18:21:05 - main - INFO - Application shut down
+2025-11-09 18:21:05 - main - INFO - Starting application...
+2025-11-09 18:21:07 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 18:21:07 - main - INFO - Application started successfully
+2025-11-09 18:21:14 - app.routers.payments - INFO - Refund request: order_tracking_id=ac70fcfa-62ef-4d7b-96ee-db1c2d3719bd, payment_amount=2000, refund_amount=2000, currency=TZS, confirmation_code=7626999206576973904606
+2025-11-09 18:21:15 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
+2025-11-09 18:21:15 - pesapal.client - INFO - Requesting refund: confirmation_code=7626999206576973904606, amount=2000.00, username=john
+2025-11-09 18:21:15 - pesapal.client - INFO - Refund request submitted: {'status': '500', 'message': 'Invalid amount provided. Please check your transaction details'}
+2025-11-09 18:21:20 - app.routers.payments - INFO - Refund request: order_tracking_id=ac70fcfa-62ef-4d7b-96ee-db1c2d3719bd, payment_amount=2000, refund_amount=2000, currency=TZS, confirmation_code=7626999206576973904606
+2025-11-09 18:21:21 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
+2025-11-09 18:21:21 - pesapal.client - INFO - Requesting refund: confirmation_code=7626999206576973904606, amount=2000.00, username=john
+2025-11-09 18:21:22 - pesapal.client - INFO - Refund request submitted: {'status': '500', 'message': 'Invalid amount provided. Please check your transaction details'}
+2025-11-09 18:21:26 - app.routers.payments - INFO - Refund request: order_tracking_id=ac70fcfa-62ef-4d7b-96ee-db1c2d3719bd, payment_amount=2000, refund_amount=2000, currency=TZS, confirmation_code=7626999206576973904606
+2025-11-09 18:21:28 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
+2025-11-09 18:21:28 - pesapal.client - INFO - Requesting refund: confirmation_code=7626999206576973904606, amount=2000.00, username=john
+2025-11-09 18:21:28 - pesapal.client - INFO - Refund request submitted: {'status': '500', 'message': 'Invalid amount provided. Please check your transaction details'}
+2025-11-09 18:22:20 - app.routers.payments - INFO - Refund request: order_tracking_id=ac70fcfa-62ef-4d7b-96ee-db1c2d3719bd, payment_amount=2000, refund_amount=2000, currency=TZS, confirmation_code=7626999206576973904606
+2025-11-09 18:22:22 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
+2025-11-09 18:22:22 - pesapal.client - INFO - Requesting refund: confirmation_code=7626999206576973904606, amount=2000.00, username=john
+2025-11-09 18:22:22 - pesapal.client - INFO - Refund request submitted: {'status': '500', 'message': 'Invalid amount provided. Please check your transaction details'}
+2025-11-09 18:22:36 - app.routers.payments - INFO - Refund request: order_tracking_id=ac70fcfa-62ef-4d7b-96ee-db1c2d3719bd, payment_amount=2000, refund_amount=2000.00, currency=TZS, confirmation_code=7626999206576973904606
+2025-11-09 18:22:38 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
+2025-11-09 18:22:38 - pesapal.client - INFO - Requesting refund: confirmation_code=7626999206576973904606, amount=2000.00, username=john
+2025-11-09 18:22:38 - pesapal.client - INFO - Refund request submitted: {'status': '500', 'message': 'Invalid amount provided. Please check your transaction details'}
+2025-11-09 18:23:58 - main - INFO - Shutting down application...
+2025-11-09 18:23:58 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 18:23:58 - main - INFO - Application shut down
+2025-11-09 18:23:59 - main - INFO - Starting application...
+2025-11-09 18:24:00 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 18:24:00 - main - INFO - Application started successfully
+2025-11-09 18:24:01 - main - INFO - Starting application...
+2025-11-09 18:24:04 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 18:24:04 - main - INFO - Application started successfully
+2025-11-09 18:24:13 - main - INFO - Shutting down application...
+2025-11-09 18:24:13 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 18:24:13 - main - INFO - Application shut down
+2025-11-09 18:24:13 - main - INFO - Starting application...
+2025-11-09 18:24:15 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 18:24:15 - main - INFO - Application started successfully
+2025-11-09 18:24:19 - main - INFO - Shutting down application...
+2025-11-09 18:24:19 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 18:24:19 - main - INFO - Application shut down
+2025-11-09 18:24:20 - main - INFO - Starting application...
+2025-11-09 18:24:21 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 18:24:21 - main - INFO - Application started successfully

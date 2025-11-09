@@ -14,7 +14,7 @@ ENDPOINT_SUBMIT_ORDER = "/api/Transactions/SubmitOrderRequest"
 ENDPOINT_GET_STATUS = "/api/Transactions/GetTransactionStatus"
 ENDPOINT_IPN_REGISTER = "/api/URLSetup/RegisterIPN"
 ENDPOINT_IPN_LIST = "/api/URLSetup/GetRegisteredNotificationUrl"  # Get list of registered IPNs
-ENDPOINT_REFUND = "/api/Transactions/RefundOrder"  # Refund request endpoint
+ENDPOINT_REFUND = "/api/Transactions/RefundRequest"  # Refund request endpoint
 ENDPOINT_CANCEL_ORDER = "/api/Transactions/CancelOrder"  # Cancel order endpoint
 
 # Payment Status Codes

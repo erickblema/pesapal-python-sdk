@@ -380,5 +380,13 @@ class PaymentService:
         status: Optional[str] = None
     ) -> list[Payment]:
         """List payments."""
-        return await self.repository.list_payments(skip, limit, status)
+        # Convert status filter to payment_state if it's a payment_state value
+        payment_state = None
+        if status:
+            status_upper = status.upper()
+            if status_upper in ["PENDING", "PROCESSING", "COMPLETED", "FAILED", "CANCELLED"]:
+                payment_state = status_upper
+                status = None  # Don't filter by status field
+        
+        return await self.repository.list_payments(skip, limit, status, payment_state)
 

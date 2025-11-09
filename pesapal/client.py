@@ -628,44 +628,61 @@ class PesapalClient:
     
     async def refund_order(
         self,
-        order_tracking_id: str,
-        amount: Optional[Decimal] = None,
-        currency: Optional[str] = None,
-        reason: Optional[str] = None
+        confirmation_code: str,
+        amount: Decimal,
+        username: str,
+        remarks: str,
+        order_tracking_id: Optional[str] = None
     ) -> dict:
         """
         Request a refund for an order.
         
+        According to Pesapal API 3.0 documentation, refund requires:
+        - confirmation_code: The payment confirmation code returned by the processor (REQUIRED)
+        - amount: The amount to be refunded (REQUIRED)
+        - username: The identity of the user initiating the refund (REQUIRED)
+        - remarks: A brief description of the reason for the refund (REQUIRED)
+        
         Args:
-            order_tracking_id: Pesapal order tracking ID
-            amount: Optional refund amount (partial refund). If None, full refund.
-            currency: Currency code (required if amount is provided)
-            reason: Optional refund reason
+            confirmation_code: Payment confirmation code from Pesapal
+            amount: Refund amount (must match payment amount for full refund)
+            username: Identity of user initiating refund
+            remarks: Reason/description for the refund
+            order_tracking_id: Optional order tracking ID (for logging/reference)
             
         Returns:
             Refund response data
             
         Raises:
             PesapalAPIError: If refund request fails
+            PesapalValidationError: If required parameters are missing
         """
+        # Validate required parameters
+        if not confirmation_code:
+            raise PesapalValidationError("confirmation_code is required for refund")
+        if not amount or amount <= 0:
+            raise PesapalValidationError("amount must be greater than 0")
+        if not username:
+            raise PesapalValidationError("username is required for refund")
+        if not remarks:
+            raise PesapalValidationError("remarks is required for refund")
+        
         # Get OAuth access token
         token = await self._get_access_token()
         
-        # Prepare request data
+        # Prepare request data according to Pesapal API 3.0 spec
+        # Note: Refund endpoint expects amount as string with 2 decimal places (e.g., "100.00")
+        # Convert Decimal to float first, then format as string with 2 decimal places
+        amount_str = f"{float(amount):.2f}"
         request_data = {
-            "order_tracking_id": order_tracking_id
+            "confirmation_code": confirmation_code,
+            "amount": amount_str,  # Format as string with 2 decimal places
+            "username": username,
+            "remarks": remarks
         }
         
-        if amount:
-            if not currency:
-                raise PesapalValidationError("Currency is required when specifying refund amount")
-            request_data["amount"] = float(amount)
-            request_data["currency"] = currency
-        
-        if reason:
-            request_data["reason"] = reason
-        
-        logger.info(f"Requesting refund for order: {order_tracking_id}")
+        logger.info(f"Requesting refund: confirmation_code={confirmation_code}, amount={amount_str}, username={username}")
+        logger.debug(f"Refund request payload: {request_data}")
         
         # Make API request with authentication
         response_data = await self._request("POST", ENDPOINT_REFUND, data=request_data, include_auth=True)

@@ -615,6 +615,7 @@ async def list_payments(
             currency=p.currency,
             description=p.description,
             status=p.status,
+            payment_state=p.payment_state or p.get_payment_state(),  # Use stored payment_state or calculate it
             order_tracking_id=p.order_tracking_id,
             redirect_url=p.redirect_url,
             payment_method=p.payment_method,
@@ -629,35 +630,86 @@ async def list_payments(
 @router.post("/refund")
 async def refund_payment(
     order_tracking_id: str,
-    amount: Optional[Decimal] = None,
-    currency: Optional[str] = None,
-    reason: Optional[str] = None,
+    amount: str,  # Accept as string (e.g., "100.00")
+    username: str,
+    remarks: str,
     service: PaymentService = Depends(get_payment_service)
 ):
     """
     Request a refund for a payment.
     
-    According to Pesapal docs, this endpoint allows you to refund an order.
-    If amount is not provided, a full refund is processed.
+    According to Pesapal API 3.0 docs, refund requires:
+    - confirmation_code: Payment confirmation code (retrieved from payment record)
+    - amount: Refund amount as string with 2 decimal places (e.g., "100.00")
+    - username: Identity of user initiating refund
+    - remarks: Reason/description for the refund
     
-    - **order_tracking_id**: Pesapal order tracking ID
-    - **amount**: Optional refund amount (partial refund)
-    - **currency**: Currency code (required if amount is provided)
-    - **reason**: Optional refund reason
+    - **order_tracking_id**: Pesapal order tracking ID (used to find payment and get confirmation_code)
+    - **amount**: Refund amount as string (e.g., "100.00") (required)
+    - **username**: Identity of user initiating refund (required)
+    - **remarks**: Reason/description for the refund (required)
     """
     try:
+        # Convert string amount to Decimal for validation
+        try:
+            refund_amount = Decimal(amount)
+            if refund_amount <= 0:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Amount must be greater than 0"
+                )
+        except (ValueError, TypeError) as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid amount format: {amount}. Expected format: '100.00'"
+            )
+        
+        # Get payment to retrieve confirmation_code
+        payment = await service.repository.get_by_tracking_id(order_tracking_id)
+        if not payment:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Payment not found for tracking ID: {order_tracking_id}"
+            )
+        
+        # Check if payment has confirmation_code (required for refund)
+        if not payment.confirmation_code:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Payment does not have a confirmation_code. Only completed payments can be refunded."
+            )
+        
+        # Validate amount doesn't exceed payment amount
+        if refund_amount > payment.amount:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Refund amount ({refund_amount}) cannot exceed payment amount ({payment.amount})"
+            )
+        
+        # Log payment details for debugging
+        logger.info(
+            f"Refund request: order_tracking_id={order_tracking_id}, "
+            f"payment_amount={payment.amount}, refund_amount={refund_amount}, "
+            f"currency={payment.currency}, confirmation_code={payment.confirmation_code}"
+        )
+        
         client = service._get_client()
         result = await client.refund_order(
-            order_tracking_id=order_tracking_id,
-            amount=amount,
-            currency=currency,
-            reason=reason
+            confirmation_code=payment.confirmation_code,
+            amount=refund_amount,
+            username=username,
+            remarks=remarks,
+            order_tracking_id=order_tracking_id
         )
         return {
             "message": "Refund request submitted successfully",
             "order_tracking_id": order_tracking_id,
+            "confirmation_code": payment.confirmation_code,
+            "amount": amount,  # Return the original string format
             "result": result
         }
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error processing refund: {e}", exc_info=True)
         raise HTTPException(
