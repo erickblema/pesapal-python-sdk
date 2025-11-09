@@ -1,0 +1,45 @@
+name: Test Package
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install build
+    
+    - name: Build package
+      run: |
+        python -m build
+    
+    - name: Install package
+      run: |
+        pip install dist/pesapal_python_sdk-*.whl
+    
+    - name: Test imports
+      run: |
+        python -c "from pesapal import PesapalClient, PaymentRequest, __version__; print(f'✅ Version: {__version__}')"
+    
+    - name: Test client initialization
+      run: |
+        python -c "from pesapal import PesapalClient; client = PesapalClient('test', 'test', sandbox=True); print('✅ Client initialized')"
+

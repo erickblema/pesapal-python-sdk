@@ -89,15 +89,15 @@ async def process_payment():
             "last_name": "Doe"
         },
         billing_address={
-            "email_address": "customer@example.com",
+      "email_address": "customer@example.com",
             "phone_number": "+255712345678",
-            "country_code": "TZ",
-            "first_name": "John",
-            "last_name": "Doe",
+      "country_code": "TZ",
+      "first_name": "John",
+      "last_name": "Doe",
             "line_1": "123 Main Street",
-            "city": "Dar es Salaam",
+      "city": "Dar es Salaam",
             "postal_code": "11101"
-        }
+    }
     )
     
     # Submit payment
