@@ -25,8 +25,8 @@ client = PesapalClient(
 # Submit payment
 payment = PaymentRequest(
     id="ORDER-123",
-    amount=Decimal("1000.00"),
-    currency="KES",
+    amount=Decimal("50000.00"),
+    currency="TZS",
     description="Payment for order #123",
     callback_url="https://your-domain.com/callback",
     notification_id="your_ipn_id"
@@ -60,14 +60,67 @@ pip install pesapal-python-sdk
 
 ## 💡 Usage Examples
 
+### Complete Payment Flow
+
+```python
+import asyncio
+from pesapal import PesapalClient, PaymentRequest
+from decimal import Decimal
+
+async def process_payment():
+    client = PesapalClient(
+        consumer_key="your_key",
+        consumer_secret="your_secret",
+        sandbox=True
+    )
+    
+    # Create payment with customer details
+    payment = PaymentRequest(
+        id="ORDER-TZS-001",
+        amount=Decimal("25000.00"),
+        currency="TZS",
+        description="Product purchase",
+        callback_url="https://your-domain.com/callback",
+        notification_id="your_ipn_id",
+        customer={
+            "email": "customer@example.com",
+            "phone_number": "+255712345678",
+            "first_name": "John",
+            "last_name": "Doe"
+        },
+        billing_address={
+            "email_address": "customer@example.com",
+            "phone_number": "+255712345678",
+            "country_code": "TZ",
+            "first_name": "John",
+            "last_name": "Doe",
+            "line_1": "123 Main Street",
+            "city": "Dar es Salaam",
+            "postal_code": "11101"
+        }
+    )
+    
+    # Submit payment
+    response = await client.submit_order(payment)
+    print(f"Tracking ID: {response.order_tracking_id}")
+    print(f"Redirect URL: {response.redirect_url}")
+    
+    return response
+
+# Run
+asyncio.run(process_payment())
+```
+
 ### Check Payment Status
 
 ```python
 status = await client.get_payment_status(
     order_tracking_id="tracking-id",
-    order_id="ORDER-123"
+    order_id="ORDER-TZS-001"
 )
 print(f"Status: {status.payment_status_description}")
+print(f"Payment Method: {status.payment_method}")
+print(f"Confirmation Code: {status.confirmation_code}")
 ```
 
 ### Process Refund
@@ -75,10 +128,20 @@ print(f"Status: {status.payment_status_description}")
 ```python
 result = await client.refund_order(
     confirmation_code="confirmation-code",
-    amount=Decimal("500.00"),
+    amount=Decimal("10000.00"),  # Partial refund in TZS
     username="admin",
-    remarks="Customer requested refund"
+    remarks="Customer requested partial refund"
 )
+print(f"Refund Status: {result.get('status')}")
+```
+
+### Cancel Pending Order
+
+```python
+result = await client.cancel_order(
+    order_tracking_id="tracking-id"
+)
+print(f"Cancel Status: {result.get('status')}")
 ```
 
 ### Register IPN
@@ -89,6 +152,37 @@ ipn = await client.register_ipn(
     ipn_notification_type="POST"
 )
 print(f"IPN ID: {ipn.notification_id}")
+print(f"IPN URL: {ipn.ipn_url}")
+```
+
+### List All IPNs
+
+```python
+ipn_list = await client.get_registered_ipns()
+for ipn in ipn_list:
+    print(f"{ipn.notification_id}: {ipn.ipn_url} ({ipn.ipn_notification_type})")
+```
+
+## 🔄 Payment Flow
+
+```
+1. Create Payment Request
+   └─> PaymentRequest(id, amount, currency="TZS", ...)
+   
+2. Submit to Pesapal
+   └─> client.submit_order(payment)
+   └─> Returns: redirect_url & tracking_id
+   
+3. Customer Completes Payment
+   └─> Redirect customer to redirect_url
+   └─> Customer pays on Pesapal
+   
+4. Check Status
+   └─> client.get_payment_status(tracking_id, order_id)
+   └─> Returns: status, payment_method, confirmation_code
+   
+5. Process Refund (if needed)
+   └─> client.refund_order(confirmation_code, amount, ...)
 ```
 
 ## 🏗️ Project Structure

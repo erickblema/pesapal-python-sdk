@@ -24,8 +24,8 @@ client = PesapalClient(
 # Submit payment
 payment = PaymentRequest(
     id="ORDER-123",
-    amount=Decimal("1000.00"),
-    currency="KES",
+    amount=Decimal("50000.00"),
+    currency="TZS",
     description="Payment for order #123",
     callback_url="https://your-domain.com/callback",
     notification_id="your_ipn_notification_id"
@@ -33,6 +33,7 @@ payment = PaymentRequest(
 
 response = await client.submit_order(payment)
 print(f"Redirect URL: {response.redirect_url}")
+print(f"Tracking ID: {response.order_tracking_id}")
 ```
 
 ## Features
@@ -47,14 +48,61 @@ print(f"Redirect URL: {response.redirect_url}")
 
 ## Usage
 
+### Complete Payment Example
+
+```python
+import asyncio
+from pesapal import PesapalClient, PaymentRequest
+from decimal import Decimal
+
+async def create_payment():
+    client = PesapalClient(
+        consumer_key="your_consumer_key",
+        consumer_secret="your_consumer_secret",
+        sandbox=True
+    )
+    
+    payment = PaymentRequest(
+        id="ORDER-TZS-001",
+        amount=Decimal("75000.00"),
+        currency="TZS",
+        description="Online purchase",
+        callback_url="https://your-domain.com/callback",
+        notification_id="your_ipn_id",
+        customer={
+            "email": "customer@example.com",
+            "phone_number": "+255712345678",
+            "first_name": "Jane",
+            "last_name": "Smith"
+        },
+        billing_address={
+            "email_address": "customer@example.com",
+            "phone_number": "+255712345678",
+            "country_code": "TZ",
+            "first_name": "Jane",
+            "last_name": "Smith",
+            "line_1": "456 Market Street",
+            "city": "Dar es Salaam",
+            "postal_code": "11102"
+        }
+    )
+    
+    response = await client.submit_order(payment)
+    return response
+
+asyncio.run(create_payment())
+```
+
 ### Check Payment Status
 
 ```python
 status = await client.get_payment_status(
     order_tracking_id="tracking-id",
-    order_id="ORDER-123"
+    order_id="ORDER-TZS-001"
 )
 print(f"Status: {status.payment_status_description}")
+print(f"Amount: {status.amount} {status.currency}")
+print(f"Payment Method: {status.payment_method}")
 ```
 
 ### Process Refund
@@ -62,10 +110,11 @@ print(f"Status: {status.payment_status_description}")
 ```python
 result = await client.refund_order(
     confirmation_code="confirmation-code",
-    amount=Decimal("500.00"),
+    amount=Decimal("25000.00"),  # Refund amount in TZS
     username="admin",
     remarks="Customer requested refund"
 )
+print(f"Refund Result: {result}")
 ```
 
 ### Cancel Order
@@ -74,6 +123,7 @@ result = await client.refund_order(
 result = await client.cancel_order(
     order_tracking_id="tracking-id"
 )
+print(f"Cancel Result: {result}")
 ```
 
 ### Register IPN
@@ -84,6 +134,7 @@ ipn = await client.register_ipn(
     ipn_notification_type="POST"
 )
 print(f"IPN ID: {ipn.notification_id}")
+print(f"IPN URL: {ipn.ipn_url}")
 ```
 
 ### List Registered IPNs
@@ -91,7 +142,9 @@ print(f"IPN ID: {ipn.notification_id}")
 ```python
 ipn_list = await client.get_registered_ipns()
 for ipn in ipn_list:
-    print(f"ID: {ipn.notification_id}, URL: {ipn.ipn_url}")
+    print(f"ID: {ipn.notification_id}")
+    print(f"URL: {ipn.ipn_url}")
+    print(f"Type: {ipn.ipn_notification_type}")
 ```
 
 ## Webhook Signature Verification
@@ -133,13 +186,24 @@ except PesapalAPIError as e:
     print(f"API error: {e}")
 ```
 
+## Payment Flow
+
+```
+1. Initialize Client → PesapalClient(consumer_key, consumer_secret)
+2. Create Payment → PaymentRequest(amount, currency="TZS", ...)
+3. Submit Order → client.submit_order(payment)
+4. Redirect Customer → Customer pays on Pesapal
+5. Check Status → client.get_payment_status(tracking_id, order_id)
+6. Process Refund → client.refund_order(...) [if needed]
+```
+
 ## Supported Currencies
 
-- KES (Kenyan Shilling)
-- TZS (Tanzanian Shilling)
-- UGX (Ugandan Shilling)
-- RWF (Rwandan Franc)
-- USD (US Dollar)
+- **TZS** (Tanzanian Shilling) - Example: 50000.00 TZS
+- **KES** (Kenyan Shilling) - Example: 1000.00 KES
+- **UGX** (Ugandan Shilling) - Example: 50000.00 UGX
+- **RWF** (Rwandan Franc) - Example: 10000.00 RWF
+- **USD** (US Dollar) - Example: 50.00 USD
 
 ## API Reference
 
