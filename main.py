@@ -4,7 +4,7 @@ from fastapi import FastAPI
 
 from app.config.settings import settings
 from app.database.db import connect_to_mongo, close_mongo_connection
-from app.routers import payments, webhooks
+from app.routers import payments, webhooks, ipn
 from app.utils.logging_config import setup_logging
 
 # Setup logging
@@ -36,6 +36,7 @@ app = FastAPI(
 # Include routers
 app.include_router(payments.router)
 app.include_router(webhooks.router)
+app.include_router(ipn.router)
 
 
 @app.get("/")

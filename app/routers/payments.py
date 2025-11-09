@@ -625,3 +625,71 @@ async def list_payments(
         for p in payments
     ]
 
+
+@router.post("/refund")
+async def refund_payment(
+    order_tracking_id: str,
+    amount: Optional[Decimal] = None,
+    currency: Optional[str] = None,
+    reason: Optional[str] = None,
+    service: PaymentService = Depends(get_payment_service)
+):
+    """
+    Request a refund for a payment.
+    
+    According to Pesapal docs, this endpoint allows you to refund an order.
+    If amount is not provided, a full refund is processed.
+    
+    - **order_tracking_id**: Pesapal order tracking ID
+    - **amount**: Optional refund amount (partial refund)
+    - **currency**: Currency code (required if amount is provided)
+    - **reason**: Optional refund reason
+    """
+    try:
+        client = service._get_client()
+        result = await client.refund_order(
+            order_tracking_id=order_tracking_id,
+            amount=amount,
+            currency=currency,
+            reason=reason
+        )
+        return {
+            "message": "Refund request submitted successfully",
+            "order_tracking_id": order_tracking_id,
+            "result": result
+        }
+    except Exception as e:
+        logger.error(f"Error processing refund: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to process refund: {str(e)}"
+        )
+
+
+@router.post("/cancel")
+async def cancel_payment(
+    order_tracking_id: str,
+    service: PaymentService = Depends(get_payment_service)
+):
+    """
+    Cancel a payment order.
+    
+    According to Pesapal docs, this endpoint allows you to cancel an order.
+    
+    - **order_tracking_id**: Pesapal order tracking ID
+    """
+    try:
+        client = service._get_client()
+        result = await client.cancel_order(order_tracking_id=order_tracking_id)
+        return {
+            "message": "Order cancellation submitted successfully",
+            "order_tracking_id": order_tracking_id,
+            "result": result
+        }
+    except Exception as e:
+        logger.error(f"Error cancelling order: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to cancel order: {str(e)}"
+        )
+

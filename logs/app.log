@@ -971,3 +971,12 @@ ValueError: Invalid webhook data: missing OrderTrackingId or OrderMerchantRefere
 2025-11-09 04:03:02 - main - INFO - Starting application...
 2025-11-09 04:03:04 - app.database.db - INFO - MongoDB connected: payments-helper-db
 2025-11-09 04:03:04 - main - INFO - Application started successfully
+2025-11-09 16:07:31 - main - INFO - Starting application...
+2025-11-09 16:07:32 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 16:07:32 - main - INFO - Application started successfully
+2025-11-09 16:11:18 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
+2025-11-09 16:11:18 - pesapal.client - INFO - Submitting payment order: TX-testing1 - 1000.0 TZS
+2025-11-09 16:11:18 - app.services.payment_service - INFO - Payment initiated successfully: order_id=TX-testing1, tracking_id=ebdd0e4f-f45b-4b4d-83c8-db1c143c3f6d
+2025-11-09 16:23:40 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
+2025-11-09 16:23:40 - pesapal.client - INFO - Submitting payment order: TX-testing2 - 1000.0 TZS
+2025-11-09 16:23:41 - app.services.payment_service - INFO - Payment initiated successfully: order_id=TX-testing2, tracking_id=8af53716-dd0f-4396-9c4a-db1c2e8c4642
