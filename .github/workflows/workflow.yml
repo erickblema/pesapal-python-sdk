@@ -34,15 +34,21 @@ jobs:
         echo "✅ Package built successfully"
         ls -lh dist/
     
+    - name: Publish to TestPyPI (if manual trigger)
+      if: github.event_name == 'workflow_dispatch'
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
+      run: |
+        python -m twine upload --repository testpypi dist/*
+        echo "✅ Published to TestPyPI: https://test.pypi.org/project/pesapal-python-sdk/"
+    
     - name: Publish to PyPI
+      if: github.event_name == 'release'
       env:
         TWINE_USERNAME: __token__
         TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
       run: |
         python -m twine upload dist/*
-    
-    - name: Verify publication
-      run: |
-        echo "✅ Package published to PyPI"
-        echo "📦 https://pypi.org/project/pesapal-python-sdk/"
+        echo "✅ Published to PyPI: https://pypi.org/project/pesapal-python-sdk/"
 
