@@ -1440,3 +1440,316 @@ bson.errors.InvalidDocument: Invalid document {'q': {'order_id': 'TX-testing1'},
 2025-11-09 18:33:52 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
 2025-11-09 18:33:52 - pesapal.client - INFO - Requesting refund: confirmation_code=7626990539466829704606, amount=1000.00, username=john
 2025-11-09 18:33:52 - pesapal.client - INFO - Refund request submitted: {'status': '500', 'message': 'Refund request has been received already'}
+2025-11-09 18:34:42 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
+2025-11-09 18:34:42 - pesapal.client - INFO - Cancelling order: 4dabc4c9-6475-43e7-8a78-db1c25315042
+2025-11-09 18:34:42 - pesapal.client - INFO - Order cancellation submitted: {'status': '500', 'message': 'Invalid order request. Transaction cannot be cancelled'}
+2025-11-09 18:36:02 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
+2025-11-09 18:36:02 - pesapal.client - INFO - Cancelling order: 987d115b-c962-48cc-add7-db1c33532d24
+2025-11-09 18:36:03 - pesapal.client - INFO - Order cancellation submitted: {'status': '500', 'message': 'Invalid order request. Transaction cannot be cancelled'}
+2025-11-09 18:37:22 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
+2025-11-09 18:37:22 - pesapal.client - INFO - Cancelling order: ac70fcfa-62ef-4d7b-96ee-db1c2d3719bd
+2025-11-09 18:37:22 - pesapal.client - INFO - Order cancellation submitted: {'status': '500', 'message': 'Invalid order request. Transaction cannot be cancelled'}
+2025-11-09 18:38:10 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
+2025-11-09 18:38:10 - pesapal.client - INFO - Submitting payment order: TX-1 - 5000.0 TZS
+2025-11-09 18:38:10 - app.services.payment_service - INFO - Payment initiated successfully: order_id=TX-1, tracking_id=dbc707c0-49be-43c8-823b-db1c193d0cfb
+2025-11-09 18:40:50 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
+2025-11-09 18:40:50 - pesapal.client - INFO - Cancelling order: dbc707c0-49be-43c8-823b-db1c193d0cfb
+2025-11-09 18:40:50 - pesapal.client - INFO - Order cancellation submitted: {'status': '500', 'message': 'Invalid order request. Transaction cannot be cancelled'}
+2025-11-09 18:42:25 - main - INFO - Shutting down application...
+2025-11-09 18:42:25 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 18:42:25 - main - INFO - Application shut down
+2025-11-09 18:42:26 - main - INFO - Starting application...
+2025-11-09 18:42:28 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 18:42:28 - main - INFO - Application started successfully
+2025-11-09 18:42:36 - main - INFO - Shutting down application...
+2025-11-09 18:42:36 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 18:42:36 - main - INFO - Application shut down
+2025-11-09 18:42:36 - main - INFO - Starting application...
+2025-11-09 18:42:38 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 18:42:38 - main - INFO - Application started successfully
+2025-11-09 18:44:04 - main - INFO - Shutting down application...
+2025-11-09 18:44:04 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 18:44:04 - main - INFO - Application shut down
+2025-11-09 18:44:05 - main - INFO - Starting application...
+2025-11-09 18:44:06 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 18:44:06 - main - INFO - Application started successfully
+2025-11-09 18:44:49 - app.routers.payments - INFO - Fetching latest payment status before cancellation: 8af53716-dd0f-4396-9c4a-db1c2e8c4642
+2025-11-09 18:44:50 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
+2025-11-09 18:44:50 - pesapal.client - INFO - Raw Pesapal status response keys: ['payment_method', 'amount', 'created_date', 'confirmation_code', 'order_tracking_id', 'payment_status_description', 'description', 'message', 'payment_account', 'call_back_url', 'status_code', 'merchant_reference', 'account_number', 'payment_status_code', 'currency', 'error', 'status']
+2025-11-09 18:44:50 - pesapal.client - INFO - Payment method extracted: 
+2025-11-09 18:44:50 - app.services.payment_service - INFO - Payment status from Pesapal: status_code=0 (0=INVALID, 1=COMPLETED, 2=FAILED, 3=REVERSED), payment_status_description=INVALID, payment_method=, confirmation_code=, mapped_status=INVALID
+2025-11-09 18:44:51 - app.services.payment_service - ERROR - Unexpected error checking payment status for order TX-testing2: Invalid document {'q': {'order_id': 'TX-testing2'}, 'u': {'$set': {'last_status_check': datetime.datetime(2025, 11, 9, 15, 44, 50, 946121), 'provider_response': {'order_tracking_id': '8af53716-dd0f-4396-9c4a-db1c2e8c4642', 'merchant_reference': 'TX-testing2', 'redirect_url': 'https://cybqa.pesapal.com/pesapaliframe/PesapalIframe3/Index?OrderTrackingId=8af53716-dd0f-4396-9c4a-db1c2e8c4642', 'status': '500', 'error': {'error_type': 'api_error', 'code': 'payment_details_not_found', 'message': 'Pending Payment', 'call_back_url': 'https://payment-helper.onrender.com/payments/callback?OrderTrackingId=8af53716-dd0f-4396-9c4a-db1c2e8c4642&OrderMerchantReference=TX-testing2'}, 'message': 'Request processed successfully', 'payment_method': '', 'amount': Decimal('1000.0'), 'created_date': datetime.datetime(2025, 11, 9, 16, 23, 40, 820000), 'confirmation_code': '', 'payment_status_description': 'INVALID', 'description': None, 'payment_account': '', 'call_back_url': 'https://payment-helper.onrender.com/payments/callback?OrderTrackingId=8af53716-dd0f-4396-9c4a-db1c2e8c4642&OrderMerchantReference=TX-testing2', 'status_code': 0, 'currency': 'TZS'}, 'status_history': [{'old_status': 'PENDING', 'new_status': '200', 'source': 'CREATION', 'reason': 'Submitted to Pesapal', 'metadata': {'order_tracking_id': '8af53716-dd0f-4396-9c4a-db1c2e8c4642', 'redirect_url': 'https://cybqa.pesapal.com/pesapaliframe/PesapalIframe3/Index?OrderTrackingId=8af53716-dd0f-4396-9c4a-db1c2e8c4642', 'pesapal_status': '200'}, 'timestamp': datetime.datetime(2025, 11, 9, 14, 14, 35, 147000)}, {'old_status': '200', 'new_status': 'INVALID', 'source': 'MANUAL_CHECK', 'reason': 'INVALID', 'metadata': {'payment_method': '', 'confirmation_code': '', 'pesapal_status_description': 'INVALID', 'message': 'Request processed successfully'}, 'timestamp': datetime.datetime(2025, 11, 9, 15, 44, 50, 946532)}], 'status': 'INVALID', 'payment_state': 'FAILED', 'payment_method': '', 'confirmation_code': ''}}, 'multi': False, 'upsert': False} | cannot encode object: Decimal('1000.0'), of type: <class 'decimal.Decimal'>
+Traceback (most recent call last):
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/app/services/payment_service.py", line 347, in check_payment_status
+    result = await self.repository.collection.update_one(
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/concurrent/futures/thread.py", line 52, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/collection.py", line 1336, in update_one
+    self._update_retryable(
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/collection.py", line 1118, in _update_retryable
+    return self._database.client._retryable_write(
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/mongo_client.py", line 2082, in _retryable_write
+    return self._retry_with_session(retryable, func, s, bulk, operation, operation_id)
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/mongo_client.py", line 1968, in _retry_with_session
+    return self._retry_internal(
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/_csot.py", line 125, in csot_wrapper
+    return func(self, *args, **kwargs)
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/mongo_client.py", line 2003, in _retry_internal
+    return _ClientConnectionRetryable(
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/mongo_client.py", line 2765, in run
+    return self._read() if self._is_read else self._write()
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/mongo_client.py", line 2897, in _write
+    return self._func(self._session, conn, self._retryable)  # type: ignore
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/collection.py", line 1098, in _update
+    return self._update(
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/collection.py", line 1049, in _update
+    conn.command(
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/helpers.py", line 47, in inner
+    return func(*args, **kwargs)
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/pool.py", line 441, in command
+    self._raise_connection_failure(error)
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/pool.py", line 413, in command
+    return command(
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/network.py", line 148, in command
+    request_id, msg, size, max_doc_size = message._op_msg(
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/message.py", line 419, in _op_msg
+    return _op_msg_uncompressed(flags, command, identifier, docs, opts)
+bson.errors.InvalidDocument: Invalid document {'q': {'order_id': 'TX-testing2'}, 'u': {'$set': {'last_status_check': datetime.datetime(2025, 11, 9, 15, 44, 50, 946121), 'provider_response': {'order_tracking_id': '8af53716-dd0f-4396-9c4a-db1c2e8c4642', 'merchant_reference': 'TX-testing2', 'redirect_url': 'https://cybqa.pesapal.com/pesapaliframe/PesapalIframe3/Index?OrderTrackingId=8af53716-dd0f-4396-9c4a-db1c2e8c4642', 'status': '500', 'error': {'error_type': 'api_error', 'code': 'payment_details_not_found', 'message': 'Pending Payment', 'call_back_url': 'https://payment-helper.onrender.com/payments/callback?OrderTrackingId=8af53716-dd0f-4396-9c4a-db1c2e8c4642&OrderMerchantReference=TX-testing2'}, 'message': 'Request processed successfully', 'payment_method': '', 'amount': Decimal('1000.0'), 'created_date': datetime.datetime(2025, 11, 9, 16, 23, 40, 820000), 'confirmation_code': '', 'payment_status_description': 'INVALID', 'description': None, 'payment_account': '', 'call_back_url': 'https://payment-helper.onrender.com/payments/callback?OrderTrackingId=8af53716-dd0f-4396-9c4a-db1c2e8c4642&OrderMerchantReference=TX-testing2', 'status_code': 0, 'currency': 'TZS'}, 'status_history': [{'old_status': 'PENDING', 'new_status': '200', 'source': 'CREATION', 'reason': 'Submitted to Pesapal', 'metadata': {'order_tracking_id': '8af53716-dd0f-4396-9c4a-db1c2e8c4642', 'redirect_url': 'https://cybqa.pesapal.com/pesapaliframe/PesapalIframe3/Index?OrderTrackingId=8af53716-dd0f-4396-9c4a-db1c2e8c4642', 'pesapal_status': '200'}, 'timestamp': datetime.datetime(2025, 11, 9, 14, 14, 35, 147000)}, {'old_status': '200', 'new_status': 'INVALID', 'source': 'MANUAL_CHECK', 'reason': 'INVALID', 'metadata': {'payment_method': '', 'confirmation_code': '', 'pesapal_status_description': 'INVALID', 'message': 'Request processed successfully'}, 'timestamp': datetime.datetime(2025, 11, 9, 15, 44, 50, 946532)}], 'status': 'INVALID', 'payment_state': 'FAILED', 'payment_method': '', 'confirmation_code': ''}}, 'multi': False, 'upsert': False} | cannot encode object: Decimal('1000.0'), of type: <class 'decimal.Decimal'>
+2025-11-09 18:44:51 - app.routers.payments - INFO - Cancelling order: order_tracking_id=8af53716-dd0f-4396-9c4a-db1c2e8c4642, status=INVALID, payment_state=FAILED, is_completed=False
+2025-11-09 18:44:51 - pesapal.client - INFO - Cancelling order: 8af53716-dd0f-4396-9c4a-db1c2e8c4642
+2025-11-09 18:44:51 - pesapal.client - INFO - Order cancellation submitted: {'status': '200', 'message': 'Order successfully cancelled.'}
+2025-11-09 18:45:14 - app.routers.payments - INFO - Fetching latest payment status before cancellation: dbc707c0-49be-43c8-823b-db1c193d0cfb
+2025-11-09 18:45:15 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
+2025-11-09 18:45:16 - pesapal.client - INFO - Raw Pesapal status response keys: ['payment_method', 'amount', 'created_date', 'confirmation_code', 'order_tracking_id', 'payment_status_description', 'description', 'message', 'payment_account', 'call_back_url', 'status_code', 'merchant_reference', 'account_number', 'payment_status_code', 'currency', 'error', 'status']
+2025-11-09 18:45:16 - pesapal.client - INFO - Payment method extracted: Visa
+2025-11-09 18:45:16 - app.services.payment_service - INFO - Payment status from Pesapal: status_code=1 (0=INVALID, 1=COMPLETED, 2=FAILED, 3=REVERSED), payment_status_description=Completed, payment_method=Visa, confirmation_code=7627027461296499004606, mapped_status=200
+2025-11-09 18:45:16 - app.services.payment_service - ERROR - Unexpected error checking payment status for order TX-1: Invalid document {'q': {'order_id': 'TX-1'}, 'u': {'$set': {'last_status_check': datetime.datetime(2025, 11, 9, 15, 45, 16, 265472), 'provider_response': {'order_tracking_id': 'dbc707c0-49be-43c8-823b-db1c193d0cfb', 'merchant_reference': 'TX-1', 'redirect_url': 'https://cybqa.pesapal.com/pesapaliframe/PesapalIframe3/Index?OrderTrackingId=dbc707c0-49be-43c8-823b-db1c193d0cfb', 'status': '200', 'error': {'error_type': None, 'code': None, 'message': None}, 'message': 'Request processed successfully', 'payment_method': 'Visa', 'amount': Decimal('1000.0'), 'created_date': datetime.datetime(2025, 11, 9, 18, 39, 8, 340000), 'confirmation_code': '7627027461296499004606', 'payment_status_description': 'Completed', 'description': 'Transaction successfully processed.', 'payment_account': '476173XXXXXX0010', 'call_back_url': 'https://payment-helper.onrender.com/payments/callback?OrderTrackingId=dbc707c0-49be-43c8-823b-db1c193d0cfb&OrderMerchantReference=TX-1', 'status_code': 1, 'currency': 'TZS'}, 'status_history': [{'old_status': 'PENDING', 'new_status': '200', 'source': 'CREATION', 'reason': 'Submitted to Pesapal', 'metadata': {'order_tracking_id': 'dbc707c0-49be-43c8-823b-db1c193d0cfb', 'redirect_url': 'https://cybqa.pesapal.com/pesapaliframe/PesapalIframe3/Index?OrderTrackingId=dbc707c0-49be-43c8-823b-db1c193d0cfb', 'pesapal_status': '200'}, 'timestamp': datetime.datetime(2025, 11, 9, 15, 38, 10, 409000)}], 'status': '200', 'payment_state': 'COMPLETED', 'payment_method': 'Visa', 'confirmation_code': '7627027461296499004606'}}, 'multi': False, 'upsert': False} | cannot encode object: Decimal('1000.0'), of type: <class 'decimal.Decimal'>
+Traceback (most recent call last):
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/app/services/payment_service.py", line 347, in check_payment_status
+    result = await self.repository.collection.update_one(
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/concurrent/futures/thread.py", line 52, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/collection.py", line 1336, in update_one
+    self._update_retryable(
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/collection.py", line 1118, in _update_retryable
+    return self._database.client._retryable_write(
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/mongo_client.py", line 2082, in _retryable_write
+    return self._retry_with_session(retryable, func, s, bulk, operation, operation_id)
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/mongo_client.py", line 1968, in _retry_with_session
+    return self._retry_internal(
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/_csot.py", line 125, in csot_wrapper
+    return func(self, *args, **kwargs)
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/mongo_client.py", line 2003, in _retry_internal
+    return _ClientConnectionRetryable(
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/mongo_client.py", line 2765, in run
+    return self._read() if self._is_read else self._write()
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/mongo_client.py", line 2897, in _write
+    return self._func(self._session, conn, self._retryable)  # type: ignore
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/collection.py", line 1098, in _update
+    return self._update(
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/collection.py", line 1049, in _update
+    conn.command(
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/helpers.py", line 47, in inner
+    return func(*args, **kwargs)
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/pool.py", line 441, in command
+    self._raise_connection_failure(error)
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/pool.py", line 413, in command
+    return command(
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/synchronous/network.py", line 148, in command
+    request_id, msg, size, max_doc_size = message._op_msg(
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/venv/lib/python3.9/site-packages/pymongo/message.py", line 419, in _op_msg
+    return _op_msg_uncompressed(flags, command, identifier, docs, opts)
+bson.errors.InvalidDocument: Invalid document {'q': {'order_id': 'TX-1'}, 'u': {'$set': {'last_status_check': datetime.datetime(2025, 11, 9, 15, 45, 16, 265472), 'provider_response': {'order_tracking_id': 'dbc707c0-49be-43c8-823b-db1c193d0cfb', 'merchant_reference': 'TX-1', 'redirect_url': 'https://cybqa.pesapal.com/pesapaliframe/PesapalIframe3/Index?OrderTrackingId=dbc707c0-49be-43c8-823b-db1c193d0cfb', 'status': '200', 'error': {'error_type': None, 'code': None, 'message': None}, 'message': 'Request processed successfully', 'payment_method': 'Visa', 'amount': Decimal('1000.0'), 'created_date': datetime.datetime(2025, 11, 9, 18, 39, 8, 340000), 'confirmation_code': '7627027461296499004606', 'payment_status_description': 'Completed', 'description': 'Transaction successfully processed.', 'payment_account': '476173XXXXXX0010', 'call_back_url': 'https://payment-helper.onrender.com/payments/callback?OrderTrackingId=dbc707c0-49be-43c8-823b-db1c193d0cfb&OrderMerchantReference=TX-1', 'status_code': 1, 'currency': 'TZS'}, 'status_history': [{'old_status': 'PENDING', 'new_status': '200', 'source': 'CREATION', 'reason': 'Submitted to Pesapal', 'metadata': {'order_tracking_id': 'dbc707c0-49be-43c8-823b-db1c193d0cfb', 'redirect_url': 'https://cybqa.pesapal.com/pesapaliframe/PesapalIframe3/Index?OrderTrackingId=dbc707c0-49be-43c8-823b-db1c193d0cfb', 'pesapal_status': '200'}, 'timestamp': datetime.datetime(2025, 11, 9, 15, 38, 10, 409000)}], 'status': '200', 'payment_state': 'COMPLETED', 'payment_method': 'Visa', 'confirmation_code': '7627027461296499004606'}}, 'multi': False, 'upsert': False} | cannot encode object: Decimal('1000.0'), of type: <class 'decimal.Decimal'>
+2025-11-09 18:45:53 - app.routers.webhooks - INFO - Webhook GET headers: {'host': 'localhost:8000', 'connection': 'keep-alive', 'sec-ch-ua-platform': '"macOS"', 'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'accept': 'application/json', 'sec-ch-ua': '"Not_A Brand";v="99", "Chromium";v="142"', 'dnt': '1', 'sec-ch-ua-mobile': '?0', 'sec-fetch-site': 'same-origin', 'sec-fetch-mode': 'cors', 'sec-fetch-dest': 'empty', 'referer': 'http://localhost:8000/docs', 'accept-encoding': 'gzip, deflate, br, zstd', 'accept-language': 'en-US,en;q=0.9', 'cookie': '_ga=GA1.1.1685698082.1760778780; accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ZjhiNDAyMGMxMmY5YTc4MTNlZDliMyIsIm5hbWUiOiJFcmljayIsImVtYWlsIjoiaGVqYWJleDkzMEBmb3hyb2lkcy5jb20iLCJyb2xlIjoiSE9URUwiLCJpYXQiOjE3NjExMjk0OTcsImV4cCI6MTc2MTczNDI5N30.LPxxPmJ792nh6p99mLNZ41-j1odyBal21fLPSJG2TgE; _ga_XB8EDYJTYJ=GS2.1.s1762271331$o15$g1$t1762272832$j60$l0$h0; sessionId=e3b51f21-e269-4a36-b8fa-776f913c2e05; __next_hmr_refresh_hash__=171'}
+2025-11-09 18:45:53 - app.routers.webhooks - INFO - Webhook GET data received: {}
+2025-11-09 18:45:53 - app.routers.webhooks - WARNING - Webhook GET received without signature - processing anyway
+2025-11-09 18:45:53 - app.routers.webhooks - WARNING - OrderNotificationType not found in webhook data (GET) from Pesapal
+2025-11-09 18:45:53 - app.routers.webhooks - WARNING - Webhook GET received but missing required fields (OrderTrackingId or OrderMerchantReference)
+2025-11-09 18:45:59 - app.routers.webhooks - INFO - Webhook headers: {'host': 'localhost:8000', 'connection': 'keep-alive', 'content-length': '0', 'sec-ch-ua-platform': '"macOS"', 'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', 'accept': 'application/json', 'sec-ch-ua': '"Not_A Brand";v="99", "Chromium";v="142"', 'dnt': '1', 'sec-ch-ua-mobile': '?0', 'origin': 'http://localhost:8000', 'sec-fetch-site': 'same-origin', 'sec-fetch-mode': 'cors', 'sec-fetch-dest': 'empty', 'referer': 'http://localhost:8000/docs', 'accept-encoding': 'gzip, deflate, br, zstd', 'accept-language': 'en-US,en;q=0.9', 'cookie': '_ga=GA1.1.1685698082.1760778780; accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ZjhiNDAyMGMxMmY5YTc4MTNlZDliMyIsIm5hbWUiOiJFcmljayIsImVtYWlsIjoiaGVqYWJleDkzMEBmb3hyb2lkcy5jb20iLCJyb2xlIjoiSE9URUwiLCJpYXQiOjE3NjExMjk0OTcsImV4cCI6MTc2MTczNDI5N30.LPxxPmJ792nh6p99mLNZ41-j1odyBal21fLPSJG2TgE; _ga_XB8EDYJTYJ=GS2.1.s1762271331$o15$g1$t1762272832$j60$l0$h0; sessionId=e3b51f21-e269-4a36-b8fa-776f913c2e05; __next_hmr_refresh_hash__=171'}
+2025-11-09 18:45:59 - app.routers.webhooks - INFO - Webhook raw body: 
+2025-11-09 18:45:59 - app.routers.webhooks - INFO - Content-Type: 
+2025-11-09 18:45:59 - app.routers.webhooks - INFO - Webhook data received: {}
+2025-11-09 18:45:59 - app.routers.webhooks - WARNING - Empty webhook data received. Body: , Content-Type: 
+2025-11-09 18:46:51 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
+2025-11-09 18:46:51 - pesapal.client - INFO - Registering IPN URL: https://example.com (type: GET)
+2025-11-09 18:46:51 - pesapal.client - INFO - IPN registered successfully: notification_id=61f275eb-e7db-45d1-b1d0-db1c8365d2c8
+2025-11-09 18:46:51 - app.routers.ipn - INFO - IPN registered: notification_id=61f275eb-e7db-45d1-b1d0-db1c8365d2c8, url=https://example.com
+2025-11-09 18:47:05 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
+2025-11-09 18:47:05 - pesapal.client - INFO - Fetching registered IPN URLs...
+2025-11-09 18:47:05 - app.routers.ipn - ERROR - Error fetching IPN list: No HTTP resource was found that matches the request URI 'https://cybqa.pesapal.com/pesapalv3/api/URLSetup/GetRegisteredNotificationUrl'.
+Traceback (most recent call last):
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/app/routers/ipn.py", line 84, in list_registered_ipns
+    ipn_list = await client.get_registered_ipns()
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/pesapal/client.py", line 574, in get_registered_ipns
+    response_data = await self._request("GET", ENDPOINT_IPN_LIST, include_auth=True)
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/pesapal/client.py", line 243, in _request
+    raise PesapalAPIError(
+pesapal.exceptions.PesapalAPIError: No HTTP resource was found that matches the request URI 'https://cybqa.pesapal.com/pesapalv3/api/URLSetup/GetRegisteredNotificationUrl'.
+2025-11-09 18:48:30 - main - INFO - Shutting down application...
+2025-11-09 18:48:31 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 18:48:31 - main - INFO - Application shut down
+2025-11-09 18:48:32 - main - INFO - Starting application...
+2025-11-09 18:48:33 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 18:48:33 - main - INFO - Application started successfully
+2025-11-09 18:48:34 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
+2025-11-09 18:48:34 - pesapal.client - INFO - Fetching registered IPN URLs...
+2025-11-09 18:48:35 - app.routers.ipn - ERROR - Error fetching IPN list: The requested resource does not support http method 'GET'.
+Traceback (most recent call last):
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/app/routers/ipn.py", line 84, in list_registered_ipns
+    ipn_list = await client.get_registered_ipns()
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/pesapal/client.py", line 574, in get_registered_ipns
+    response_data = await self._request("GET", ENDPOINT_IPN_LIST, include_auth=True)
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/pesapal/client.py", line 243, in _request
+    raise PesapalAPIError(
+pesapal.exceptions.PesapalAPIError: The requested resource does not support http method 'GET'.
+2025-11-09 18:50:46 - main - INFO - Shutting down application...
+2025-11-09 18:50:46 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 18:50:46 - main - INFO - Application shut down
+2025-11-09 18:50:47 - main - INFO - Starting application...
+2025-11-09 18:50:48 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 18:50:48 - main - INFO - Application started successfully
+2025-11-09 18:51:26 - main - INFO - Shutting down application...
+2025-11-09 18:51:26 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 18:51:26 - main - INFO - Application shut down
+2025-11-09 18:51:26 - main - INFO - Starting application...
+2025-11-09 18:51:28 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 18:51:28 - main - INFO - Application started successfully
+2025-11-09 18:51:29 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
+2025-11-09 18:51:29 - pesapal.client - INFO - Fetching registered IPN URLs...
+2025-11-09 18:51:30 - app.routers.ipn - ERROR - Error fetching IPN list: The requested resource does not support http method 'GET'.
+Traceback (most recent call last):
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/app/routers/ipn.py", line 84, in list_registered_ipns
+    ipn_list = await client.get_registered_ipns()
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/pesapal/client.py", line 574, in get_registered_ipns
+    response_data = await self._request("GET", ENDPOINT_IPN_LIST, include_auth=True)
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/pesapal/client.py", line 243, in _request
+    raise PesapalAPIError(
+pesapal.exceptions.PesapalAPIError: The requested resource does not support http method 'GET'.
+2025-11-09 18:52:01 - main - INFO - Shutting down application...
+2025-11-09 18:52:01 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 18:52:01 - main - INFO - Application shut down
+2025-11-09 18:52:02 - main - INFO - Starting application...
+2025-11-09 18:52:03 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 18:52:03 - main - INFO - Application started successfully
+2025-11-09 18:52:04 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
+2025-11-09 18:52:04 - pesapal.client - INFO - Fetching registered IPN URLs...
+2025-11-09 18:52:05 - app.routers.ipn - ERROR - Error fetching IPN list: An error has occurred.
+Traceback (most recent call last):
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/app/routers/ipn.py", line 84, in list_registered_ipns
+    ipn_list = await client.get_registered_ipns()
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/pesapal/client.py", line 574, in get_registered_ipns
+    response_data = await self._request("POST", ENDPOINT_IPN_LIST, include_auth=True)
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/pesapal/client.py", line 243, in _request
+    raise PesapalAPIError(
+pesapal.exceptions.PesapalAPIError: An error has occurred.
+2025-11-09 18:52:29 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
+2025-11-09 18:52:29 - pesapal.client - INFO - Fetching registered IPN URLs...
+2025-11-09 18:52:30 - app.routers.ipn - ERROR - Error fetching IPN list: An error has occurred.
+Traceback (most recent call last):
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/app/routers/ipn.py", line 84, in list_registered_ipns
+    ipn_list = await client.get_registered_ipns()
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/pesapal/client.py", line 574, in get_registered_ipns
+    response_data = await self._request("POST", ENDPOINT_IPN_LIST, include_auth=True)
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/pesapal/client.py", line 243, in _request
+    raise PesapalAPIError(
+pesapal.exceptions.PesapalAPIError: An error has occurred.
+2025-11-09 18:52:58 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
+2025-11-09 18:52:58 - pesapal.client - INFO - Fetching registered IPN URLs...
+2025-11-09 18:52:58 - app.routers.ipn - ERROR - Error fetching IPN list: An error has occurred.
+Traceback (most recent call last):
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/app/routers/ipn.py", line 84, in list_registered_ipns
+    ipn_list = await client.get_registered_ipns()
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/pesapal/client.py", line 574, in get_registered_ipns
+    response_data = await self._request("POST", ENDPOINT_IPN_LIST, include_auth=True)
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/pesapal/client.py", line 243, in _request
+    raise PesapalAPIError(
+pesapal.exceptions.PesapalAPIError: An error has occurred.
+2025-11-09 18:53:41 - main - INFO - Shutting down application...
+2025-11-09 18:53:41 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 18:53:41 - main - INFO - Application shut down
+2025-11-09 18:53:42 - main - INFO - Starting application...
+2025-11-09 18:53:43 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 18:53:43 - main - INFO - Application started successfully
+2025-11-09 18:53:44 - main - INFO - Shutting down application...
+2025-11-09 18:53:44 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 18:53:44 - main - INFO - Application shut down
+2025-11-09 18:53:45 - main - INFO - Starting application...
+2025-11-09 18:53:46 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 18:53:46 - main - INFO - Application started successfully
+2025-11-09 18:53:54 - main - INFO - Shutting down application...
+2025-11-09 18:53:54 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 18:53:54 - main - INFO - Application shut down
+2025-11-09 18:53:54 - main - INFO - Starting application...
+2025-11-09 18:53:56 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 18:53:56 - main - INFO - Application started successfully
+2025-11-09 18:54:03 - main - INFO - Shutting down application...
+2025-11-09 18:54:03 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 18:54:03 - main - INFO - Application shut down
+2025-11-09 18:54:03 - main - INFO - Starting application...
+2025-11-09 18:54:05 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 18:54:05 - main - INFO - Application started successfully
+2025-11-09 18:54:13 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
+2025-11-09 18:54:13 - pesapal.client - INFO - Fetching registered IPN URLs...
+2025-11-09 18:54:13 - app.routers.ipn - ERROR - Error fetching IPN list: No HTTP resource was found that matches the request URI 'https://cybqa.pesapal.com/pesapalv3/api/URLSetup/GetRegisteredNotificationUrl'.
+Traceback (most recent call last):
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/app/routers/ipn.py", line 84, in list_registered_ipns
+    ipn_list = await client.get_registered_ipns()
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/pesapal/client.py", line 577, in get_registered_ipns
+    response_data = await self._request("GET", ENDPOINT_IPN_LIST, include_auth=True)
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/pesapal/client.py", line 243, in _request
+    raise PesapalAPIError(
+pesapal.exceptions.PesapalAPIError: No HTTP resource was found that matches the request URI 'https://cybqa.pesapal.com/pesapalv3/api/URLSetup/GetRegisteredNotificationUrl'.
+2025-11-09 18:54:13 - main - INFO - Shutting down application...
+2025-11-09 18:54:13 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 18:54:13 - main - INFO - Application shut down
+2025-11-09 18:54:13 - main - INFO - Starting application...
+2025-11-09 18:54:15 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 18:54:15 - main - INFO - Application started successfully
+2025-11-09 18:54:58 - main - INFO - Shutting down application...
+2025-11-09 18:54:58 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 18:54:58 - main - INFO - Application shut down
+2025-11-09 18:54:58 - main - INFO - Starting application...
+2025-11-09 18:55:00 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 18:55:00 - main - INFO - Application started successfully
+2025-11-09 18:55:06 - main - INFO - Shutting down application...
+2025-11-09 18:55:06 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 18:55:06 - main - INFO - Application shut down
+2025-11-09 18:55:06 - main - INFO - Starting application...
+2025-11-09 18:55:08 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 18:55:08 - main - INFO - Application started successfully
+2025-11-09 18:55:29 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
+2025-11-09 18:55:29 - pesapal.client - INFO - Fetching registered IPN URLs...
+2025-11-09 18:55:30 - app.routers.ipn - ERROR - Error fetching IPN list: 'int' object has no attribute 'upper'
+Traceback (most recent call last):
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/app/routers/ipn.py", line 84, in list_registered_ipns
+    ipn_list = await client.get_registered_ipns()
+  File "/Users/mac/Desktop/Projects/sidejob/sdk-payments/pesapal/client.py", line 653, in get_registered_ipns
+    ipn_notification_type=ipn_type.upper(),
+AttributeError: 'int' object has no attribute 'upper'
+2025-11-09 18:55:58 - main - INFO - Shutting down application...
+2025-11-09 18:55:58 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 18:55:58 - main - INFO - Application shut down
+2025-11-09 18:55:58 - main - INFO - Starting application...
+2025-11-09 18:56:00 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 18:56:00 - main - INFO - Application started successfully
+2025-11-09 18:56:00 - main - INFO - Shutting down application...
+2025-11-09 18:56:00 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 18:56:00 - main - INFO - Application shut down
+2025-11-09 18:56:01 - main - INFO - Starting application...
+2025-11-09 18:56:02 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 18:56:02 - main - INFO - Application started successfully
+2025-11-09 18:56:06 - main - INFO - Shutting down application...
+2025-11-09 18:56:06 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 18:56:06 - main - INFO - Application shut down
+2025-11-09 18:56:06 - main - INFO - Starting application...
+2025-11-09 18:56:08 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 18:56:08 - main - INFO - Application started successfully
+2025-11-09 18:56:13 - pesapal.client - INFO - OAuth token obtained successfully (expires in 5 minutes)
+2025-11-09 18:56:13 - pesapal.client - INFO - Fetching registered IPN URLs...
+2025-11-09 18:56:14 - pesapal.client - INFO - Found 835 registered IPN(s)
+2025-11-09 18:56:40 - main - INFO - Shutting down application...
+2025-11-09 18:56:40 - app.database.db - INFO - MongoDB disconnected
+2025-11-09 18:56:40 - main - INFO - Application shut down
+2025-11-09 18:56:40 - main - INFO - Starting application...
+2025-11-09 18:56:42 - app.database.db - INFO - MongoDB connected: payments-helper-db
+2025-11-09 18:56:42 - main - INFO - Application started successfully

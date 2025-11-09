@@ -750,18 +750,84 @@ async def cancel_payment(
     """
     Cancel a payment order.
     
-    According to Pesapal docs, this endpoint allows you to cancel an order.
+    According to Pesapal docs, orders can only be cancelled if they are in PENDING state.
+    Completed, processing, or paid transactions cannot be cancelled (use refund instead).
     
     - **order_tracking_id**: Pesapal order tracking ID
     """
     try:
+        # Get payment to check its status
+        payment = await service.repository.get_by_tracking_id(order_tracking_id)
+        if not payment:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Payment not found for tracking ID: {order_tracking_id}"
+            )
+        
+        # Fetch latest status from Pesapal to ensure we have current state
+        try:
+            logger.info(f"Fetching latest payment status before cancellation: {order_tracking_id}")
+            updated_payment = await service.check_payment_status(payment.order_id)
+            payment = updated_payment
+        except Exception as e:
+            logger.warning(f"Could not fetch latest status from Pesapal, using cached status: {e}")
+            # Continue with existing payment data
+        
+        # Check if payment can be cancelled
+        # Only PENDING payments can be cancelled (not completed, processing, or failed)
+        payment_state = payment.get_payment_state()
+        is_completed = payment.is_completed()
+        has_confirmation_code = bool(payment.confirmation_code)
+        has_payment_method = bool(payment.payment_method)
+        
+        # Determine if payment is cancellable
+        # Payment is NOT cancellable if:
+        # 1. It has a confirmation_code (completed payment)
+        # 2. It has a payment_method (completed payment)
+        # 3. Payment state is COMPLETED
+        # 4. Status is "200" AND has completion indicators
+        
+        if is_completed or has_confirmation_code or has_payment_method:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=(
+                    f"Payment cannot be cancelled. Payment is in '{payment_state}' state. "
+                    f"Only PENDING payments can be cancelled. "
+                    f"Status: {payment.status}, "
+                    f"Payment Method: {payment.payment_method or 'None'}, "
+                    f"Confirmation Code: {'Present' if payment.confirmation_code else 'None'}. "
+                    f"To reverse a completed payment, use the refund endpoint instead."
+                )
+            )
+        
+        # Check if payment status indicates it's already processed
+        status_upper = str(payment.status).upper()
+        if status_upper in ["COMPLETED", "PROCESSING", "200"] and (has_confirmation_code or has_payment_method):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=(
+                    f"Payment cannot be cancelled. Payment status is '{payment.status}' and appears to be processed. "
+                    f"Only PENDING payments can be cancelled. Use the refund endpoint for completed payments."
+                )
+            )
+        
+        logger.info(
+            f"Cancelling order: order_tracking_id={order_tracking_id}, "
+            f"status={payment.status}, payment_state={payment_state}, "
+            f"is_completed={is_completed}"
+        )
+        
         client = service._get_client()
         result = await client.cancel_order(order_tracking_id=order_tracking_id)
         return {
             "message": "Order cancellation submitted successfully",
             "order_tracking_id": order_tracking_id,
+            "payment_status": payment.status,
+            "payment_state": payment_state,
             "result": result
         }
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error cancelling order: {e}", exc_info=True)
         raise HTTPException(

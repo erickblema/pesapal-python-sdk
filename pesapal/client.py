@@ -571,7 +571,16 @@ class PesapalClient:
         logger.info("Fetching registered IPN URLs...")
         
         # Make API request with authentication
-        response_data = await self._request("GET", ENDPOINT_IPN_LIST, include_auth=True)
+        # Note: GET method is typically used for retrieving lists, but Pesapal may require POST
+        # Try GET first, fallback to POST if needed
+        try:
+            response_data = await self._request("GET", ENDPOINT_IPN_LIST, include_auth=True)
+        except PesapalAPIError as e:
+            if "404" in str(e) or "method not allowed" in str(e).lower():
+                logger.info("GET method failed, trying POST for IPN list...")
+                response_data = await self._request("POST", ENDPOINT_IPN_LIST, include_auth=True)
+            else:
+                raise
         
         # Parse response - Pesapal may return array or object with array
         ipn_list = []
@@ -580,17 +589,38 @@ class PesapalClient:
         if isinstance(response_data, list):
             ipn_data_list = response_data
         elif isinstance(response_data, dict):
+            # Check for error in response (look for error object or error status)
+            if "error" in response_data:
+                error_obj = response_data.get("error", {})
+                if isinstance(error_obj, dict):
+                    error_msg = error_obj.get("message", error_obj.get("error", "Unknown error"))
+                else:
+                    error_msg = str(error_obj)
+                raise PesapalAPIError(
+                    f"Pesapal API error: {error_msg}",
+                    response_data=response_data
+                )
+            
+            # Check for error status
+            if response_data.get("status") and str(response_data.get("status")).startswith(("4", "5")):
+                error_msg = response_data.get("message", "An error has occurred")
+                raise PesapalAPIError(
+                    f"Pesapal API error: {error_msg}",
+                    response_data=response_data
+                )
+            
             # Try common field names
             ipn_data_list = (
                 response_data.get("ipns") or
                 response_data.get("ipn_list") or
                 response_data.get("notifications") or
                 response_data.get("data") or
+                response_data.get("notification_urls") or
                 [response_data]  # Single IPN in object
             )
         else:
             raise PesapalAPIError(
-                f"Unexpected IPN list response format: {type(response_data)}",
+                f"Unexpected IPN list response format: {type(response_data)}. Response: {response_data}",
                 response_data=response_data
             )
         
@@ -616,10 +646,21 @@ class PesapalClient:
                     "GET"
                 )
                 
+                # Convert ipn_type to string and normalize (handle integers or other types)
+                if ipn_type:
+                    ipn_type_str = str(ipn_type).upper()
+                    # Map common values
+                    if ipn_type_str in ["0", "GET"]:
+                        ipn_type_str = "GET"
+                    elif ipn_type_str in ["1", "POST"]:
+                        ipn_type_str = "POST"
+                else:
+                    ipn_type_str = "GET"
+                
                 if notification_id and ipn_url:
                     ipn_list.append(IPNRegistration(
                         notification_id=notification_id,
-                        ipn_notification_type=ipn_type.upper(),
+                        ipn_notification_type=ipn_type_str,
                         ipn_url=ipn_url
                     ))
         
