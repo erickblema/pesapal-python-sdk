@@ -524,7 +524,7 @@ class PesapalClient:
         logger.info("Fetching registered IPN URLs...")
         
         try:
-            response_data = await self._request("GET", ENDPOINT_IPN_LIST, include_auth=True)
+            response_data = await self._request("POST", ENDPOINT_IPN_LIST, include_auth=True)
         except PesapalAPIError as e:
             if "404" in str(e) or "method not allowed" in str(e).lower():
                 logger.info("GET method failed, trying POST for IPN list...")
